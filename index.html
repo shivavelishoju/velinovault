@@ -53,8 +53,10 @@ body {
     transition: background 0.3s, color 0.3s;
 }
 
-/* Splash & Welcome Screens */
-#splash-screen, #welcomeScreen {
+/* ========================================= */
+/* RESPONSIVE SPLASH SCREEN                  */
+/* ========================================= */
+#splash-screen {
     position: fixed;
     inset: 0;
     display: flex;
@@ -90,11 +92,13 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    flex-wrap: nowrap;
     font-size: clamp(1.8rem, 8vw, 4rem);
     font-weight: 100;
     letter-spacing: clamp(4px, .8vw, 12px);
     color: #fff;
     text-align: center;
+    perspective: 1000px;
 }
 
 .apple-logo-text span {
@@ -132,11 +136,25 @@ body {
     font-size: 12px;
     letter-spacing: 2px;
     text-align: center;
+    padding: 0 20px;
 }
 
+/* ========================================= */
+/* WELCOME SCREEN                            */
+/* ========================================= */
 #welcomeScreen {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(to bottom, #0d67c8, #07427c);
+    z-index: 999999;
     opacity: 0;
     visibility: hidden;
+    transition: opacity .8s ease;
+    overflow: hidden;
 }
 
 #welcomeScreen.show {
@@ -161,13 +179,19 @@ body {
 .yellow { background: #ffb900; }
 
 #welcomeScreen h1 {
+    margin: 0;
     color: #fff;
     font-weight: 200;
     font-size: clamp(26px, 5vw, 56px);
     letter-spacing: 2px;
+    text-align: center;
+    padding: 0 20px;
+    line-height: 1.3;
 }
 
-/* Modals */
+/* ========================================= */
+/* MODAL OVERLAY (Folder Passcode Lock)       */
+/* ========================================= */
 .modal-overlay {
     position: fixed;
     inset: 0;
@@ -189,7 +213,7 @@ body {
     box-shadow: var(--shadow);
 }
 
-.pin-input, .text-input {
+.pin-input {
     width: 100%;
     padding: 12px;
     margin: 15px 0;
@@ -198,15 +222,13 @@ body {
     border-radius: 10px;
     color: var(--text);
     text-align: center;
-    font-size: 1.2rem;
-}
-
-.pin-input {
     font-size: 1.5rem;
     letter-spacing: 8px;
 }
 
-/* Application Layout */
+/* ========================================= */
+/* APPLICATION LAYOUT (Modern Sidebar)       */
+/* ========================================= */
 .app-wrapper {
     display: flex;
     width: 100vw;
@@ -295,6 +317,8 @@ body {
     border: none;
     color: var(--text);
     cursor: pointer;
+    width: auto;
+    padding: 0;
 }
 
 .top-actions {
@@ -327,7 +351,6 @@ button {
 .action-btn { background: var(--primary); }
 .action-btn:hover { background: var(--primary-hover); }
 .clear-btn { background: var(--danger); }
-.secondary-btn { background: #6c757d; }
 .pdf-btn { background: var(--secondary); margin-top: 15px; width: 100%; }
 
 /* Switch Styling */
@@ -381,8 +404,6 @@ button {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
-    flex-wrap: wrap;
-    gap: 10px;
 }
 
 .folder-title-area {
@@ -391,13 +412,7 @@ button {
     gap: 10px;
 }
 
-.folder-actions {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-/* Upload Zone */
+/* Cross-Browser Reliable Upload Zone */
 .upload-zone {
     display: block;
     border: 2px dashed var(--primary);
@@ -522,7 +537,7 @@ button {
     <h1 id="welcomeTitle">Welcome to Secure Vault</h1>
 </div>
 
-<!-- PASSCODE MODAL OVERLAY -->
+<!-- FOLDER LOCK/UNLOCK MODAL OVERLAY -->
 <div class="modal-overlay" id="folderAuthModal">
     <div class="modal-card">
         <i class="fa-solid fa-folder-lock" style="font-size: 3rem; color: var(--primary); margin-bottom: 10px;"></i>
@@ -530,18 +545,6 @@ button {
         <p style="font-size: 0.85rem; opacity: 0.7; margin-top: 5px;" id="modalInstruction">Enter Folder PIN to Access</p>
         <input type="password" id="folderPinInput" class="pin-input" maxlength="4" placeholder="••••">
         <button class="action-btn" style="width: 100%;" onclick="submitFolderAuth()">Submit</button>
-        <button class="clear-btn" style="width: 100%; margin-top: 8px;" onclick="closeModal('folderAuthModal')">Cancel</button>
-    </div>
-</div>
-
-<!-- RENAME FOLDER MODAL OVERLAY -->
-<div class="modal-overlay" id="renameFolderModal">
-    <div class="modal-card">
-        <i class="fa-solid fa-pen-to-square" style="font-size: 3rem; color: var(--primary); margin-bottom: 10px;"></i>
-        <h2>Rename Folder</h2>
-        <input type="text" id="renameFolderInput" class="text-input" placeholder="New Folder Name">
-        <button class="action-btn" style="width: 100%;" onclick="submitRenameFolder()">Save Name</button>
-        <button class="clear-btn" style="width: 100%; margin-top: 8px;" onclick="closeModal('renameFolderModal')">Cancel</button>
     </div>
 </div>
 
@@ -556,8 +559,34 @@ button {
             <i class="fa-solid fa-vault"></i> SecureVault
         </div>
         
-        <ul class="sidebar-menu" id="sidebarMenu">
-            <!-- Dynamic Sidebar Folders rendered via JavaScript -->
+        <ul class="sidebar-menu">
+            <li class="menu-item active" onclick="selectFolder('All')">
+                <div class="menu-item-left"><i class="fa-solid fa-border-all"></i> <span id="menuAll">All Documents</span></div>
+            </li>
+            <li class="menu-item" onclick="selectFolder('Education')">
+                <div class="menu-item-left"><i class="fa-solid fa-graduation-cap"></i> <span id="menuEdu">Education</span></div>
+                <i class="fa-solid fa-lock badge-lock" id="lock-Education" style="display:none;"></i>
+            </li>
+            <li class="menu-item" onclick="selectFolder('Identity')">
+                <div class="menu-item-left"><i class="fa-solid fa-id-card"></i> <span id="menuId">Identity</span></div>
+                <i class="fa-solid fa-lock badge-lock" id="lock-Identity" style="display:none;"></i>
+            </li>
+            <li class="menu-item" onclick="selectFolder('Property')">
+                <div class="menu-item-left"><i class="fa-solid fa-house-chimney"></i> <span id="menuProp">Property</span></div>
+                <i class="fa-solid fa-lock badge-lock" id="lock-Property" style="display:none;"></i>
+            </li>
+            <li class="menu-item" onclick="selectFolder('Employment')">
+                <div class="menu-item-left"><i class="fa-solid fa-briefcase"></i> <span id="menuEmp">Employment</span></div>
+                <i class="fa-solid fa-lock badge-lock" id="lock-Employment" style="display:none;"></i>
+            </li>
+            <li class="menu-item" onclick="selectFolder('Financial')">
+                <div class="menu-item-left"><i class="fa-solid fa-building-columns"></i> <span id="menuFin">Financial</span></div>
+                <i class="fa-solid fa-lock badge-lock" id="lock-Financial" style="display:none;"></i>
+            </li>
+            <li class="menu-item" onclick="selectFolder('Others')">
+                <div class="menu-item-left"><i class="fa-solid fa-folder-open"></i> <span id="menuOth">Others</span></div>
+                <i class="fa-solid fa-lock badge-lock" id="lock-Others" style="display:none;"></i>
+            </li>
         </ul>
     </aside>
 
@@ -586,10 +615,10 @@ button {
             <div class="folder-title-area">
                 <h2 id="currentFolderName">All Documents</h2>
             </div>
-            <div class="folder-actions" id="folderActionsArea"></div>
+            <div id="securityToggleBtnArea"></div>
         </div>
 
-        <!-- HTML Label-based File Upload Zone -->
+        <!-- HTML Label-based File Upload Zone (Browser & Mobile Friendly) -->
         <label for="fileInput" class="upload-zone">
             <i class="fa-solid fa-cloud-arrow-up" style="font-size: 2.2rem; color: var(--primary); margin-bottom: 8px;"></i>
             <p id="uploadText" style="font-weight: 600;">Click or Drag files to Upload</p>
@@ -613,16 +642,6 @@ button {
 <script>
 let activeFolder = 'All';
 
-// Folder List Config
-let folderList = JSON.parse(localStorage.getItem('velino_folderList')) || [
-    { id: 'Education', name: 'Education', icon: 'fa-graduation-cap' },
-    { id: 'Identity', name: 'Identity', icon: 'fa-id-card' },
-    { id: 'Property', name: 'Property', icon: 'fa-house-chimney' },
-    { id: 'Employment', name: 'Employment', icon: 'fa-briefcase' },
-    { id: 'Financial', name: 'Financial', icon: 'fa-building-columns' },
-    { id: 'Others', name: 'Others', icon: 'fa-folder-open' }
-];
-
 // Load or Initialize Folder Passcode Configurations
 let folderSecurity = JSON.parse(localStorage.getItem('velino_folderSecurity')) || {
     'Education': { isConfidential: false, pin: null, unlocked: false },
@@ -642,7 +661,6 @@ let documents = JSON.parse(localStorage.getItem('velino_documents')) || [
 function saveStateToStorage() {
     localStorage.setItem('velino_documents', JSON.stringify(documents));
     localStorage.setItem('velino_folderSecurity', JSON.stringify(folderSecurity));
-    localStorage.setItem('velino_folderList', JSON.stringify(folderList));
 }
 
 const translations = {
@@ -650,6 +668,12 @@ const translations = {
         welcome: "Welcome to Secure Vault",
         upload: "Click or Drag files to Upload",
         all: "All Documents",
+        edu: "Education",
+        id: "Identity",
+        prop: "Property",
+        emp: "Employment",
+        fin: "Financial",
+        oth: "Others",
         pdf: "📄 Download Vault Inventory Report",
         footer: "Developed by shiva velishoju"
     },
@@ -657,6 +681,12 @@ const translations = {
         welcome: "సెక్యూర్ వాల్ట్‌కు స్వాగతం",
         upload: "ఫైళ్లను అప్‌లోడ్ చేయడానికి క్లిక్ చేయండి",
         all: "అన్ని రకాల పత్రాలు",
+        edu: "విద్య సార్టిఫికెట్లు",
+        id: "గుర్తింపు కార్డులు",
+        prop: "ఆస్తి పత్రాలు",
+        emp: "ఉద్యోగ ధృవీకరణ పత్రాలు",
+        fin: "ఆర్థిక పత్రాలు",
+        oth: "ఇతరం",
         pdf: "📄 డాక్యుమెంట్ నివేదిక డౌన్‌లోడ్",
         footer: "Developed by shiva velishoju"
     }
@@ -676,46 +706,13 @@ window.addEventListener("load", function () {
                 welcome.classList.remove("show");
                 setTimeout(function () {
                     welcome.style.display = "none";
-                    renderSidebarMenu();
+                    updateLockBadges();
                     renderWorkspace();
                 }, 800);
             }, 2000);
         }, 800);
     }, 2200);
 });
-
-function renderSidebarMenu() {
-    const menu = document.getElementById('sidebarMenu');
-    menu.innerHTML = '';
-
-    // "All Documents" Item
-    const allLi = document.createElement('li');
-    allLi.className = `menu-item ${activeFolder === 'All' ? 'active' : ''}`;
-    allLi.onclick = () => selectFolder('All');
-    allLi.innerHTML = `<div class="menu-item-left"><i class="fa-solid fa-border-all"></i> <span id="menuAll">All Documents</span></div>`;
-    menu.appendChild(allLi);
-
-    // Custom Folders
-    folderList.forEach(folder => {
-        const li = document.createElement('li');
-        li.className = `menu-item ${activeFolder === folder.id ? 'active' : ''}`;
-        li.onclick = () => selectFolder(folder.id);
-
-        const sec = folderSecurity[folder.id] || { isConfidential: false, unlocked: false };
-        let lockBadge = '';
-        if (sec.isConfidential) {
-            lockBadge = sec.unlocked 
-                ? `<i class="fa-solid fa-lock-open badge-unlock"></i>` 
-                : `<i class="fa-solid fa-lock badge-lock"></i>`;
-        }
-
-        li.innerHTML = `
-            <div class="menu-item-left"><i class="fa-solid ${folder.icon}"></i> <span>${folder.name}</span></div>
-            ${lockBadge}
-        `;
-        menu.appendChild(li);
-    });
-}
 
 function toggleSidebar() {
     document.getElementById("sidebar").classList.toggle("open");
@@ -727,24 +724,45 @@ function closeSidebar() {
     document.getElementById("sidebarBackdrop").classList.remove("active");
 }
 
-function selectFolder(folderId) {
+function selectFolder(folderName) {
     closeSidebar();
-    if (folderId !== 'All' && folderSecurity[folderId]?.isConfidential && !folderSecurity[folderId]?.unlocked) {
-        promptFolderAuth(folderId, 'unlock');
+    if (folderName !== 'All' && folderSecurity[folderName].isConfidential && !folderSecurity[folderName].unlocked) {
+        promptFolderAuth(folderName, 'unlock');
         return;
     }
-    activeFolder = folderId;
-    renderSidebarMenu();
+    activeFolder = folderName;
+    updateSidebarUI();
     renderWorkspace();
 }
 
-let authContext = { folderId: null, action: null };
+function updateSidebarUI() {
+    const items = document.querySelectorAll('.menu-item');
+    items.forEach(item => item.classList.remove('active'));
 
-function promptFolderAuth(folderId, action) {
-    authContext = { folderId: folderId, action: action };
-    const folderObj = folderList.find(f => f.id === folderId);
-    const folderName = folderObj ? folderObj.name : folderId;
+    const activeIndex = ['All', 'Education', 'Identity', 'Property', 'Employment', 'Financial', 'Others'].indexOf(activeFolder);
+    if (activeIndex !== -1) {
+        items[activeIndex].classList.add('active');
+    }
+}
 
+function updateLockBadges() {
+    for (let folder in folderSecurity) {
+        const badge = document.getElementById(`lock-${folder}`);
+        if (badge) {
+            if (folderSecurity[folder].isConfidential) {
+                badge.style.display = 'inline-block';
+                badge.className = folderSecurity[folder].unlocked ? 'fa-solid fa-lock-open badge-unlock' : 'fa-solid fa-lock badge-lock';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+    }
+}
+
+let authContext = { folder: null, action: null };
+
+function promptFolderAuth(folderName, action) {
+    authContext = { folder: folderName, action: action };
     const modal = document.getElementById('folderAuthModal');
     const title = document.getElementById('modalFolderTitle');
     const instruction = document.getElementById('modalInstruction');
@@ -754,10 +772,10 @@ function promptFolderAuth(folderId, action) {
 
     if (action === 'unlock') {
         title.innerText = `Unlock ${folderName}`;
-        instruction.innerText = "Enter 4-digit passcode to open folder";
+        instruction.innerText = "Enter passcode to access folder";
     } else if (action === 'setPin') {
-        title.innerText = `Make ${folderName} Private`;
-        instruction.innerText = "Set a 4-digit passcode to lock folder";
+        title.innerText = `Make ${folderName} Confidential`;
+        instruction.innerText = "Set a 4-digit passcode for this folder";
     }
 
     modal.style.display = 'flex';
@@ -765,113 +783,68 @@ function promptFolderAuth(folderId, action) {
 
 function submitFolderAuth() {
     const pin = document.getElementById('folderPinInput').value;
-    const { folderId, action } = authContext;
+    const { folder, action } = authContext;
 
     if (!pin || pin.length !== 4) {
         alert("Please enter a valid 4-digit PIN.");
         return;
     }
 
-    if (!folderSecurity[folderId]) {
-        folderSecurity[folderId] = { isConfidential: false, pin: null, unlocked: false };
-    }
-
     if (action === 'unlock') {
-        if (pin === folderSecurity[folderId].pin) {
-            folderSecurity[folderId].unlocked = true;
-            closeModal('folderAuthModal');
-            activeFolder = folderId;
+        if (pin === folderSecurity[folder].pin) {
+            folderSecurity[folder].unlocked = true;
+            document.getElementById('folderAuthModal').style.display = 'none';
+            activeFolder = folder;
             saveStateToStorage();
-            renderSidebarMenu();
+            updateLockBadges();
+            updateSidebarUI();
             renderWorkspace();
         } else {
             alert("Incorrect Folder Passcode!");
             document.getElementById('folderPinInput').value = '';
         }
     } else if (action === 'setPin') {
-        folderSecurity[folderId].isConfidential = true;
-        folderSecurity[folderId].pin = pin;
-        folderSecurity[folderId].unlocked = true;
-        closeModal('folderAuthModal');
+        folderSecurity[folder].isConfidential = true;
+        folderSecurity[folder].pin = pin;
+        folderSecurity[folder].unlocked = true;
+        document.getElementById('folderAuthModal').style.display = 'none';
         saveStateToStorage();
-        renderSidebarMenu();
+        updateLockBadges();
         renderWorkspace();
-        alert(`Folder is now Private!`);
+        alert(`${folder} folder is now Confidential!`);
     }
 }
 
-function toggleFolderSecurity(folderId) {
-    if (folderSecurity[folderId]?.isConfidential) {
-        if (confirm(`Make this folder Public (Remove Passcode)?`)) {
-            folderSecurity[folderId].isConfidential = false;
-            folderSecurity[folderId].pin = null;
-            folderSecurity[folderId].unlocked = false;
+function toggleFolderSecurity(folderName) {
+    if (folderSecurity[folderName].isConfidential) {
+        if (confirm(`Do you want to make ${folderName} folder Public (Remove Passcode)?`)) {
+            folderSecurity[folderName].isConfidential = false;
+            folderSecurity[folderName].pin = null;
+            folderSecurity[folderName].unlocked = false;
             saveStateToStorage();
-            renderSidebarMenu();
+            updateLockBadges();
             renderWorkspace();
         }
     } else {
-        promptFolderAuth(folderId, 'setPin');
+        promptFolderAuth(folderName, 'setPin');
     }
-}
-
-function openRenameModal() {
-    const folderObj = folderList.find(f => f.id === activeFolder);
-    if (!folderObj) return;
-
-    document.getElementById('renameFolderInput').value = folderObj.name;
-    document.getElementById('renameFolderModal').style.display = 'flex';
-}
-
-function submitRenameFolder() {
-    const newName = document.getElementById('renameFolderInput').value.trim();
-    if (!newName) {
-        alert("Folder name cannot be empty.");
-        return;
-    }
-
-    const folderObj = folderList.find(f => f.id === activeFolder);
-    if (folderObj) {
-        folderObj.name = newName;
-        saveStateToStorage();
-        closeModal('renameFolderModal');
-        renderSidebarMenu();
-        renderWorkspace();
-    }
-}
-
-function closeModal(modalId) {
-    document.getElementById(modalId).style.display = 'none';
 }
 
 function renderWorkspace() {
-    const folderObj = folderList.find(f => f.id === activeFolder);
-    const displayTitle = activeFolder === 'All' ? 'All Documents' : (folderObj ? folderObj.name : activeFolder);
+    document.getElementById('currentFolderName').innerText = activeFolder === 'All' ? 'All Documents' : activeFolder;
     
-    document.getElementById('currentFolderName').innerText = displayTitle;
-    
-    const actionsArea = document.getElementById('folderActionsArea');
-    actionsArea.innerHTML = '';
+    const btnArea = document.getElementById('securityToggleBtnArea');
+    btnArea.innerHTML = '';
 
     if (activeFolder !== 'All') {
-        // Rename Button
-        const renameBtn = document.createElement('button');
-        renameBtn.className = 'secondary-btn';
-        renameBtn.style.padding = '8px 14px';
-        renameBtn.style.fontSize = '0.85rem';
-        renameBtn.innerHTML = '<i class="fa-solid fa-pen"></i> Rename Folder';
-        renameBtn.onclick = openRenameModal;
-        actionsArea.appendChild(renameBtn);
-
-        // Security Lock Toggle Button
-        const isConf = folderSecurity[activeFolder]?.isConfidential;
-        const lockBtn = document.createElement('button');
-        lockBtn.className = isConf ? 'clear-btn' : 'action-btn';
-        lockBtn.style.padding = '8px 14px';
-        lockBtn.style.fontSize = '0.85rem';
-        lockBtn.innerHTML = isConf ? '<i class="fa-solid fa-lock-open"></i> Make Public' : '<i class="fa-solid fa-lock"></i> Make Private';
-        lockBtn.onclick = () => toggleFolderSecurity(activeFolder);
-        actionsArea.appendChild(lockBtn);
+        const isConf = folderSecurity[activeFolder].isConfidential;
+        const btn = document.createElement('button');
+        btn.className = isConf ? 'clear-btn' : 'action-btn';
+        btn.style.padding = '8px 14px';
+        btn.style.fontSize = '0.85rem';
+        btn.innerHTML = isConf ? '<i class="fa-solid fa-lock-open"></i> Make Public' : '<i class="fa-solid fa-lock"></i> Make Confidential';
+        btn.onclick = () => toggleFolderSecurity(activeFolder);
+        btnArea.appendChild(btn);
     }
 
     const grid = document.getElementById('documentGrid');
@@ -892,7 +865,7 @@ function renderWorkspace() {
         card.innerHTML = `
             <div class="doc-icon"><i class="fa-solid ${iconClass}"></i></div>
             <div class="doc-title">${doc.name}</div>
-            <div class="doc-meta">${displayTitle}</div>
+            <div class="doc-meta">${doc.category}</div>
             <div class="doc-meta">${doc.size}</div>
             <div class="doc-actions">
                 <button class="action-btn doc-btn" onclick="viewDoc(${doc.id})"><i class="fa-solid fa-eye"></i></button>
@@ -922,14 +895,14 @@ function handleFileUpload(event) {
             type: file.type.includes('pdf') ? 'pdf' : 'image',
             size: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
             date: new Date().toISOString().split('T')[0],
-            data: e.target.result
+            data: e.target.result // Base64 data string
         };
 
         documents.push(newDoc);
         saveStateToStorage();
         renderWorkspace();
-        event.target.value = '';
-        alert(`File "${file.name}" saved securely!`);
+        event.target.value = ''; // Reset input
+        alert(`File "${file.name}" saved securely in ${activeFolder}!`);
     };
 
     reader.readAsDataURL(file);
@@ -970,6 +943,13 @@ function changeLanguage() {
 
     document.getElementById("welcomeTitle").innerText = t.welcome;
     document.getElementById("uploadText").innerText = t.upload;
+    document.getElementById("menuAll").innerText = t.all;
+    document.getElementById("menuEdu").innerText = t.edu;
+    document.getElementById("menuId").innerText = t.id;
+    document.getElementById("menuProp").innerText = t.prop;
+    document.getElementById("menuEmp").innerText = t.emp;
+    document.getElementById("menuFin").innerText = t.fin;
+    document.getElementById("menuOth").innerText = t.oth;
     document.getElementById("pdfBtn").innerText = t.pdf;
     document.getElementById("footerText").innerText = t.footer;
 }
@@ -995,10 +975,8 @@ function downloadPDFReport() {
 
     let y = 55;
     documents.forEach((d, index) => {
-        const folderObj = folderList.find(f => f.id === d.category);
-        const catName = folderObj ? folderObj.name : d.category;
         doc.setFontSize(10);
-        doc.text(`${index + 1}. ${d.name} | Folder: ${catName} | Size: ${d.size} | Date: ${d.date}`, 14, y);
+        doc.text(`${index + 1}. ${d.name} | Folder: ${d.category} | Size: ${d.size} | Date: ${d.date}`, 14, y);
         y += 10;
     });
 
