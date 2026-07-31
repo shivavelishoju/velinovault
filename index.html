@@ -236,7 +236,6 @@ body {
     overflow: hidden;
 }
 
-/* Sidebar Styles */
 .sidebar {
     width: var(--sidebar-width);
     background: var(--sidebar-bg);
@@ -292,17 +291,9 @@ body {
     color: var(--primary);
 }
 
-.badge-lock {
-    font-size: 0.8rem;
-    color: var(--danger);
-}
+.badge-lock { font-size: 0.8rem; color: var(--danger); }
+.badge-unlock { font-size: 0.8rem; color: var(--secondary); }
 
-.badge-unlock {
-    font-size: 0.8rem;
-    color: var(--secondary);
-}
-
-/* Main Workspace */
 .main-content {
     flex: 1;
     display: flex;
@@ -421,8 +412,9 @@ button {
     gap: 10px;
 }
 
-/* Upload & Content Grid */
+/* Cross-Browser Reliable Upload Zone */
 .upload-zone {
+    display: block;
     border: 2px dashed var(--primary);
     padding: 25px;
     border-radius: 16px;
@@ -495,7 +487,6 @@ button {
     opacity: .8;
 }
 
-/* Responsive Mobile Layout */
 .sidebar-backdrop {
     position: fixed;
     inset: 0;
@@ -513,18 +504,10 @@ button {
         transform: translateX(-100%);
         box-shadow: var(--shadow);
     }
-    .sidebar.open {
-        transform: translateX(0);
-    }
-    .sidebar-backdrop.active {
-        display: block;
-    }
-    .mobile-nav-toggle {
-        display: block;
-    }
-    .main-content {
-        padding: 15px;
-    }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-backdrop.active { display: block; }
+    .mobile-nav-toggle { display: block; }
+    .main-content { padding: 15px; }
 }
 </style>
 </head>
@@ -568,7 +551,6 @@ button {
 <!-- MAIN APP CONTAINER -->
 <div class="app-wrapper">
     
-    <!-- Mobile Sidebar Backdrop -->
     <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
 
     <!-- MODERN SIDEBAR NAVIGATION -->
@@ -610,7 +592,6 @@ button {
 
     <!-- WORKSPACE AREA -->
     <main class="main-content">
-        <!-- Top Navigation Controls -->
         <header class="top-bar">
             <button class="mobile-nav-toggle" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
 
@@ -630,28 +611,23 @@ button {
             </div>
         </header>
 
-        <!-- Folder Header Bar with Confidentiality Controls -->
         <div class="folder-header">
             <div class="folder-title-area">
                 <h2 id="currentFolderName">All Documents</h2>
             </div>
-            <div id="securityToggleBtnArea">
-                <!-- Toggle Confidential Button appended dynamically -->
-            </div>
+            <div id="securityToggleBtnArea"></div>
         </div>
 
-        <!-- Document Import Upload Zone -->
-        <div class="upload-zone" onclick="triggerFileInput()">
+        <!-- HTML Label-based File Upload Zone (Browser & Mobile Friendly) -->
+        <label for="fileInput" class="upload-zone">
             <i class="fa-solid fa-cloud-arrow-up" style="font-size: 2.2rem; color: var(--primary); margin-bottom: 8px;"></i>
             <p id="uploadText" style="font-weight: 600;">Click or Drag files to Upload</p>
-            <span style="font-size: 0.8rem; opacity: 0.7;">Supports PDF, PNG, JPG</span>
+            <span style="font-size: 0.8rem; opacity: 0.7;">Supports PDF, PNG, JPG (Auto-Saved)</span>
             <input type="file" id="fileInput" style="display: none;" onchange="handleFileUpload(event)">
-        </div>
+        </label>
 
-        <!-- Document Cards Grid -->
         <div class="doc-grid" id="documentGrid"></div>
 
-        <!-- Inventory Report Generator -->
         <button class="pdf-btn" onclick="downloadPDFReport()" id="pdfBtn">
             📄 Download Vault Inventory Report
         </button>
@@ -664,11 +640,10 @@ button {
 </div>
 
 <script>
-// --- App State Management ---
 let activeFolder = 'All';
 
-// Configuration for Folder Security (Public vs Confidential with Passcode)
-let folderSecurity = {
+// Load or Initialize Folder Passcode Configurations
+let folderSecurity = JSON.parse(localStorage.getItem('velino_folderSecurity')) || {
     'Education': { isConfidential: false, pin: null, unlocked: false },
     'Identity': { isConfidential: true, pin: '1234', unlocked: false },
     'Property': { isConfidential: false, pin: null, unlocked: false },
@@ -677,13 +652,17 @@ let folderSecurity = {
     'Others': { isConfidential: false, pin: null, unlocked: false }
 };
 
-let documents = [
-    { id: 1, name: "BTech_Degree.pdf", category: "Education", type: "pdf", size: "1.2 MB", date: "2026-02-15" },
-    { id: 2, name: "Passport_Copy.jpg", category: "Identity", type: "image", size: "850 KB", date: "2026-03-01" },
-    { id: 3, name: "Land_Sale_Deed.pdf", category: "Property", type: "pdf", size: "4.5 MB", date: "2026-01-10" }
+// Load or Initialize Stored Documents
+let documents = JSON.parse(localStorage.getItem('velino_documents')) || [
+    { id: 1, name: "BTech_Degree.pdf", category: "Education", type: "pdf", size: "1.2 MB", date: "2026-02-15", data: null },
+    { id: 2, name: "Passport_Copy.jpg", category: "Identity", type: "image", size: "850 KB", date: "2026-03-01", data: null }
 ];
 
-// --- Translations ---
+function saveStateToStorage() {
+    localStorage.setItem('velino_documents', JSON.stringify(documents));
+    localStorage.setItem('velino_folderSecurity', JSON.stringify(folderSecurity));
+}
+
 const translations = {
     en: {
         welcome: "Welcome to Secure Vault",
@@ -713,7 +692,6 @@ const translations = {
     }
 };
 
-// --- Initialization & Splash Sequence ---
 window.addEventListener("load", function () {
     const splash = document.getElementById("splash-screen");
     const welcome = document.getElementById("welcomeScreen");
@@ -736,7 +714,6 @@ window.addEventListener("load", function () {
     }, 2200);
 });
 
-// --- Sidebar Navigation Control ---
 function toggleSidebar() {
     document.getElementById("sidebar").classList.toggle("open");
     document.getElementById("sidebarBackdrop").classList.toggle("active");
@@ -749,13 +726,10 @@ function closeSidebar() {
 
 function selectFolder(folderName) {
     closeSidebar();
-    
-    // Check if folder is confidential & currently locked
     if (folderName !== 'All' && folderSecurity[folderName].isConfidential && !folderSecurity[folderName].unlocked) {
         promptFolderAuth(folderName, 'unlock');
         return;
     }
-
     activeFolder = folderName;
     updateSidebarUI();
     renderWorkspace();
@@ -785,7 +759,6 @@ function updateLockBadges() {
     }
 }
 
-// --- Individual Folder Passcode Engine ---
 let authContext = { folder: null, action: null };
 
 function promptFolderAuth(folderName, action) {
@@ -822,6 +795,7 @@ function submitFolderAuth() {
             folderSecurity[folder].unlocked = true;
             document.getElementById('folderAuthModal').style.display = 'none';
             activeFolder = folder;
+            saveStateToStorage();
             updateLockBadges();
             updateSidebarUI();
             renderWorkspace();
@@ -834,6 +808,7 @@ function submitFolderAuth() {
         folderSecurity[folder].pin = pin;
         folderSecurity[folder].unlocked = true;
         document.getElementById('folderAuthModal').style.display = 'none';
+        saveStateToStorage();
         updateLockBadges();
         renderWorkspace();
         alert(`${folder} folder is now Confidential!`);
@@ -842,25 +817,22 @@ function submitFolderAuth() {
 
 function toggleFolderSecurity(folderName) {
     if (folderSecurity[folderName].isConfidential) {
-        // Switch to Public
         if (confirm(`Do you want to make ${folderName} folder Public (Remove Passcode)?`)) {
             folderSecurity[folderName].isConfidential = false;
             folderSecurity[folderName].pin = null;
             folderSecurity[folderName].unlocked = false;
+            saveStateToStorage();
             updateLockBadges();
             renderWorkspace();
         }
     } else {
-        // Switch to Confidential
         promptFolderAuth(folderName, 'setPin');
     }
 }
 
-// --- Workspace & Document Rendering ---
 function renderWorkspace() {
     document.getElementById('currentFolderName').innerText = activeFolder === 'All' ? 'All Documents' : activeFolder;
     
-    // Security Toggle Button Render
     const btnArea = document.getElementById('securityToggleBtnArea');
     btnArea.innerHTML = '';
 
@@ -875,7 +847,6 @@ function renderWorkspace() {
         btnArea.appendChild(btn);
     }
 
-    // Grid Render
     const grid = document.getElementById('documentGrid');
     grid.innerHTML = '';
 
@@ -897,7 +868,7 @@ function renderWorkspace() {
             <div class="doc-meta">${doc.category}</div>
             <div class="doc-meta">${doc.size}</div>
             <div class="doc-actions">
-                <button class="action-btn doc-btn" onclick="viewDoc('${doc.name}')"><i class="fa-solid fa-eye"></i></button>
+                <button class="action-btn doc-btn" onclick="viewDoc(${doc.id})"><i class="fa-solid fa-eye"></i></button>
                 <button class="clear-btn doc-btn" onclick="deleteDoc(${doc.id})"><i class="fa-solid fa-trash"></i></button>
             </div>
         `;
@@ -905,43 +876,60 @@ function renderWorkspace() {
     });
 }
 
-// --- Document File Actions ---
-function triggerFileInput() {
+function handleFileUpload(event) {
     if (activeFolder === 'All') {
-        alert("Please select a specific folder from the sidebar to upload documents into.");
+        alert("Please select a specific folder from the sidebar before uploading.");
+        event.target.value = '';
         return;
     }
-    document.getElementById('fileInput').click();
-}
 
-function handleFileUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
 
-    const newDoc = {
-        id: Date.now(),
-        name: file.name,
-        category: activeFolder,
-        type: file.type.includes('pdf') ? 'pdf' : 'image',
-        size: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
-        date: new Date().toISOString().split('T')[0]
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const newDoc = {
+            id: Date.now(),
+            name: file.name,
+            category: activeFolder,
+            type: file.type.includes('pdf') ? 'pdf' : 'image',
+            size: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
+            date: new Date().toISOString().split('T')[0],
+            data: e.target.result // Base64 data string
+        };
+
+        documents.push(newDoc);
+        saveStateToStorage();
+        renderWorkspace();
+        event.target.value = ''; // Reset input
+        alert(`File "${file.name}" saved securely in ${activeFolder}!`);
     };
 
-    documents.push(newDoc);
-    renderWorkspace();
-    alert(`File "${file.name}" added to ${activeFolder}!`);
+    reader.readAsDataURL(file);
 }
 
-function viewDoc(name) {
-    alert(`Decrypting and loading ${name} in memory...`);
+function viewDoc(id) {
+    const doc = documents.find(d => d.id === id);
+    if (!doc) return;
+
+    if (doc.data) {
+        const win = window.open();
+        if (win) {
+            win.document.write(`<iframe src="${doc.data}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
+        } else {
+            alert("Pop-up blocked! Allow pop-ups to view document.");
+        }
+    } else {
+        alert(`Simulated view for pre-existing document: ${doc.name}`);
+    }
 }
 
 function deleteDoc(id) {
     documents = documents.filter(d => d.id !== id);
+    saveStateToStorage();
     renderWorkspace();
 }
 
-// --- Theme & Language Toggles ---
 function toggleTheme() {
     document.body.classList.toggle("dark");
     const isDark = document.body.classList.contains("dark");
@@ -966,7 +954,6 @@ function changeLanguage() {
     document.getElementById("footerText").innerText = t.footer;
 }
 
-// --- PDF Inventory Export ---
 function downloadPDFReport() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -1000,7 +987,6 @@ function downloadPDFReport() {
     doc.save("Vault_Inventory_Report.pdf");
 }
 
-// Prevent Context Menu
 document.addEventListener('contextmenu', e => e.preventDefault());
 </script>
 </body>
