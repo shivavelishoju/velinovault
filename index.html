@@ -907,7 +907,8 @@ function renderWorkspace() {
         let iconClass = doc.type === 'pdf' ? 'fa-file-pdf' : 'fa-file-image';
         if (doc.isLocked) iconClass = 'fa-file-shield';
 
-        const lockBtnIcon = doc.isLocked ? 'fa-lock-open' : 'fa-lock';
+        // FIXED: Shows closed lock icon when locked, open lock icon when unlocked
+        const lockBtnIcon = doc.isLocked ? 'fa-lock' : 'fa-lock-open';
         const lockBtnClass = doc.isLocked ? 'lock-btn' : 'lock-btn';
 
         card.innerHTML = `
@@ -916,15 +917,14 @@ function renderWorkspace() {
             <div class="doc-meta">${doc.category}</div>
             <div class="doc-meta">${doc.size}</div>
             <div class="doc-actions">
-                <button class="action-btn doc-btn" onclick="viewDoc(${doc.id})"><i class="fa-solid fa-eye"></i></button>
-                <button class="${lockBtnClass} doc-btn" onclick="toggleFileLock(${doc.id})"><i class="fa-solid ${lockBtnIcon}"></i></button>
-                <button class="clear-btn doc-btn" onclick="deleteDoc(${doc.id})"><i class="fa-solid fa-trash"></i></button>
+                <button class="action-btn doc-btn" onclick="viewDoc(${doc.id})" title="View File"><i class="fa-solid fa-eye"></i></button>
+                <button class="${lockBtnClass} doc-btn" onclick="toggleFileLock(${doc.id})" title="${doc.isLocked ? 'Unlock File' : 'Lock File'}"><i class="fa-solid ${lockBtnIcon}"></i></button>
+                <button class="clear-btn doc-btn" onclick="deleteDoc(${doc.id})" title="Delete File"><i class="fa-solid fa-trash"></i></button>
             </div>
         `;
         grid.appendChild(card);
     });
 }
-
 function handleFileUpload(event) {
     if (activeFolder === 'All') {
         alert("Please select a specific folder from the sidebar before uploading.");
