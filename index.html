@@ -54,7 +54,7 @@ body {
 }
 
 /* ========================================= */
-/* SPLASH & WELCOME SCREENS (FIXED)          */
+/* SPLASH & WELCOME SCREENS                   */
 /* ========================================= */
 #splash-screen {
     position: fixed;
@@ -210,6 +210,29 @@ body {
     width: 90%;
     max-width: 380px;
     box-shadow: var(--shadow);
+    position: relative; /* Position context for close button */
+}
+
+/* Modal Close Button */
+.modal-close-btn {
+    position: absolute;
+    top: 15px;
+    right: 18px;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--text);
+    opacity: 0.6;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+.modal-close-btn:hover {
+    opacity: 1;
+    transform: scale(1.1);
 }
 
 .pin-input {
@@ -412,7 +435,7 @@ button {
     gap: 10px;
 }
 
-/* Cross-Browser Reliable Upload Zone */
+/* Upload Zone */
 .upload-zone {
     display: block;
     border: 2px dashed var(--primary);
@@ -546,8 +569,11 @@ button {
 </div>
 
 <!-- GENERAL AUTH MODAL (Folder & File Passcode Lock) -->
-<div class="modal-overlay" id="authModal">
+<div class="modal-overlay" id="authModal" onclick="if(event.target === this) closeAuthModal()">
     <div class="modal-card">
+        <!-- Close Button -->
+        <button class="modal-close-btn" onclick="closeAuthModal()" title="Close">&times;</button>
+        
         <i class="fa-solid fa-lock" id="modalIcon" style="font-size: 3rem; color: var(--primary); margin-bottom: 10px;"></i>
         <h2 id="modalTitle">Security Authentication</h2>
         <p style="font-size: 0.85rem; opacity: 0.7; margin-top: 5px;" id="modalInstruction">Enter Passcode</p>
@@ -636,10 +662,6 @@ button {
 
         <div class="doc-grid" id="documentGrid"></div>
 
-        <!-- <button class="pdf-btn" onclick="downloadPDFReport()" id="pdfBtn">
-            📄 Download Vault Inventory Report
-        </button> -->
-
         <footer class="footer" id="footerText">
             Developed by shiva velishoju
         </footer>
@@ -700,9 +722,6 @@ const translations = {
     }
 };
 
-/* ========================================= */
-/* SMOOTH SPLASH TO WELCOME SCREEN TRANSITION*/
-/* ========================================= */
 window.addEventListener("DOMContentLoaded", function () {
     const splash = document.getElementById("splash-screen");
     const welcome = document.getElementById("welcomeScreen");
@@ -798,9 +817,14 @@ function promptAuth(type, id, action = '') {
     modal.style.display = 'flex';
 }
 
+function closeAuthModal() {
+    document.getElementById('authModal').style.display = 'none';
+    document.getElementById('authPinInput').value = '';
+}
+
 function submitAuth() {
     const pin = document.getElementById('authPinInput').value;
-    const { targetType, targetId, action } = currentAuth;
+    const { targetType, targetId } = currentAuth;
 
     if (!pin || pin.length !== 4) {
         alert("Please enter a valid 4-digit PIN.");
@@ -810,7 +834,7 @@ function submitAuth() {
     if (targetType === 'folder-unlock') {
         if (pin === folderSecurity[targetId].pin) {
             folderSecurity[targetId].unlocked = true;
-            document.getElementById('authModal').style.display = 'none';
+            closeAuthModal();
             activeFolder = targetId;
             saveStateToStorage();
             updateLockBadges();
@@ -823,7 +847,7 @@ function submitAuth() {
         folderSecurity[targetId].isConfidential = true;
         folderSecurity[targetId].pin = pin;
         folderSecurity[targetId].unlocked = true;
-        document.getElementById('authModal').style.display = 'none';
+        closeAuthModal();
         saveStateToStorage();
         updateLockBadges();
         renderWorkspace();
@@ -832,7 +856,7 @@ function submitAuth() {
         if (doc) {
             doc.isLocked = true;
             doc.pin = pin;
-            document.getElementById('authModal').style.display = 'none';
+            closeAuthModal();
             saveStateToStorage();
             renderWorkspace();
         }
@@ -841,7 +865,7 @@ function submitAuth() {
         if (doc && doc.pin === pin) {
             doc.isLocked = false;
             doc.pin = null;
-            document.getElementById('authModal').style.display = 'none';
+            closeAuthModal();
             saveStateToStorage();
             renderWorkspace();
         } else {
@@ -850,7 +874,7 @@ function submitAuth() {
     } else if (targetType === 'file-view') {
         const doc = documents.find(d => d.id === targetId);
         if (doc && doc.pin === pin) {
-            document.getElementById('authModal').style.display = 'none';
+            closeAuthModal();
             openDocumentViewer(doc);
         } else {
             alert("Incorrect File Passcode!");
@@ -885,7 +909,7 @@ function renderWorkspace() {
         btn.className = isConf ? 'clear-btn' : 'action-btn';
         btn.style.padding = '8px 14px';
         btn.style.fontSize = '0.85rem';
-        // btn.innerHTML = isConf ? '<i class="fa-solid fa-lock-open"></i> Make Public' : '<i class="fa-solid fa-lock"></i> Make Confidential';
+        btn.innerHTML = isConf ? '<i class="fa-solid fa-lock-open"></i> Make Public' : '<i class="fa-solid fa-lock"></i> Make Confidential';
         
         btn.onclick = () => toggleFolderSecurity(activeFolder);
         btnArea.appendChild(btn);
@@ -908,7 +932,6 @@ function renderWorkspace() {
         let iconClass = doc.type === 'pdf' ? 'fa-file-pdf' : 'fa-file-image';
         if (doc.isLocked) iconClass = 'fa-file-shield';
 
-        // FIXED: Shows closed lock icon when locked, open lock icon when unlocked
         const lockBtnIcon = doc.isLocked ? 'fa-lock' : 'fa-lock-open';
         const lockBtnClass = doc.isLocked ? 'lock-btn' : 'lock-btn';
 
@@ -926,6 +949,7 @@ function renderWorkspace() {
         grid.appendChild(card);
     });
 }
+
 function handleFileUpload(event) {
     if (activeFolder === 'All') {
         alert("Please select a specific folder from the sidebar before uploading.");
@@ -1026,42 +1050,7 @@ function changeLanguage() {
     document.getElementById("menuEmp").innerText = t.emp;
     document.getElementById("menuFin").innerText = t.fin;
     document.getElementById("menuOth").innerText = t.oth;
-    document.getElementById("pdfBtn").innerText = t.pdf;
     document.getElementById("footerText").innerText = t.footer;
-}
-
-function downloadPDFReport() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    const date = new Date().toLocaleString();
-
-    doc.setFillColor(0, 123, 255);
-    doc.rect(0, 0, 210, 25, "F");
-
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(18);
-    doc.text("VELINO Secure Vault Inventory", 105, 16, { align: "center" });
-
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(10);
-    doc.text("Generated: " + date, 14, 35);
-
-    doc.setFontSize(12);
-    doc.text("Vault Summary:", 14, 45);
-
-    let y = 55;
-    documents.forEach((d, index) => {
-        doc.setFontSize(10);
-        const lockStatus = d.isLocked ? "[Locked]" : "[Public]";
-        doc.text(`${index + 1}. ${d.name} ${lockStatus} | Folder: ${d.category} | Size: ${d.size} | Date: ${d.date}`, 14, y);
-        y += 10;
-    });
-
-    doc.setFontSize(10);
-    doc.setTextColor(120);
-    doc.text("Developed by Shiva Velishoju", 105, 285, { align: "center" });
-
-    doc.save("Vault_Inventory_Report.pdf");
 }
 
 document.addEventListener('contextmenu', e => e.preventDefault());
