@@ -259,6 +259,87 @@ body {
 }
 
 /* ========================================= */
+/* FULLSCREEN IN-APP DOCUMENT VIEWER         */
+/* ========================================= */
+.viewer-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    z-index: 100000;
+    display: none;
+    flex-direction: column;
+}
+
+.viewer-modal.active {
+    display: flex;
+}
+
+.viewer-header {
+    height: 60px;
+    background: var(--card);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 15px;
+    border-bottom: 1px solid var(--border);
+}
+
+.viewer-title {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 60%;
+}
+
+.viewer-close-btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.viewer-close-btn:hover {
+    background: var(--primary-hover);
+}
+
+.viewer-body {
+    flex: 1;
+    width: 100%;
+    height: calc(100% - 60px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: auto;
+    padding: 10px;
+}
+
+.viewer-body iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 8px;
+    background: white;
+}
+
+.viewer-body img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+/* ========================================= */
 /* APPLICATION LAYOUT (DESKTOP & MOBILE)     */
 /* ========================================= */
 .app-wrapper {
@@ -630,6 +711,17 @@ button {
         <input type="password" id="authPinInput" class="pin-input" maxlength="4" placeholder="••••" inputmode="numeric">
         <button class="action-btn" style="width: 100%; padding: 12px;" onclick="submitAuth()">Submit</button>
     </div>
+</div>
+
+<!-- FULLSCREEN IN-APP DOCUMENT VIEWER WITH MOBILE-FRIENDLY BACK BUTTON -->
+<div class="viewer-modal" id="documentViewerModal">
+    <div class="viewer-header">
+        <button class="viewer-close-btn" onclick="closeDocumentViewer()">
+            <i class="fa-solid fa-arrow-left"></i> Back to Vault
+        </button>
+        <span class="viewer-title" id="viewerDocTitle">Document Title</span>
+    </div>
+    <div class="viewer-body" id="viewerContainer"></div>
 </div>
 
 <!-- 3. MAIN RESPONSIVE APP CONTAINER -->
@@ -1060,17 +1152,33 @@ function viewDoc(id) {
     }
 }
 
+/* IN-APP DOCUMENT VIEWER LOGIC */
 function openDocumentViewer(doc) {
+    const viewerModal = document.getElementById('documentViewerModal');
+    const container = document.getElementById('viewerContainer');
+    const title = document.getElementById('viewerDocTitle');
+
+    title.innerText = doc.name;
+    container.innerHTML = '';
+
     if (doc.data) {
-        const win = window.open();
-        if (win) {
-            win.document.write(`<iframe src="${doc.data}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
+        if (doc.type === 'pdf') {
+            container.innerHTML = `<iframe src="${doc.data}"></iframe>`;
         } else {
-            alert("Pop-up blocked! Allow pop-ups to view document.");
+            container.innerHTML = `<img src="${doc.data}" alt="${doc.name}">`;
         }
     } else {
-        alert(`Simulated view for pre-existing document: ${doc.name}`);
+        container.innerHTML = `<p style="color: white; font-size: 1.1rem; text-align: center;">Pre-existing document preview unavailable.<br><small style="opacity:0.7;">Upload a new document to preview live.</small></p>`;
     }
+
+    viewerModal.classList.add('active');
+}
+
+function closeDocumentViewer() {
+    const viewerModal = document.getElementById('documentViewerModal');
+    const container = document.getElementById('viewerContainer');
+    viewerModal.classList.remove('active');
+    container.innerHTML = '';
 }
 
 function deleteDoc(id) {
