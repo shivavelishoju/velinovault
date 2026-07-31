@@ -54,7 +54,7 @@ body {
 }
 
 /* ========================================= */
-/* RESPONSIVE SPLASH SCREEN                  */
+/* SPLASH & WELCOME SCREENS (FIXED)          */
 /* ========================================= */
 #splash-screen {
     position: fixed;
@@ -67,11 +67,12 @@ body {
     overflow: hidden;
     z-index: 999999;
     opacity: 1;
-    transition: opacity .8s ease;
+    transition: opacity 0.8s ease, visibility 0.8s ease;
 }
 
 #splash-screen.fade-out {
     opacity: 0;
+    visibility: hidden;
     pointer-events: none;
 }
 
@@ -139,9 +140,7 @@ body {
     padding: 0 20px;
 }
 
-/* ========================================= */
-/* WELCOME SCREEN                            */
-/* ========================================= */
+/* WELCOME SCREEN */
 #welcomeScreen {
     position: fixed;
     inset: 0;
@@ -150,10 +149,10 @@ body {
     justify-content: center;
     align-items: center;
     background: linear-gradient(to bottom, #0d67c8, #07427c);
-    z-index: 999999;
+    z-index: 999998;
     opacity: 0;
     visibility: hidden;
-    transition: opacity .8s ease;
+    transition: opacity 0.8s ease, visibility 0.8s ease;
     overflow: hidden;
 }
 
@@ -190,7 +189,7 @@ body {
 }
 
 /* ========================================= */
-/* MODAL OVERLAY (Folder Passcode Lock)       */
+/* MODAL OVERLAY (Passcode Auth)             */
 /* ========================================= */
 .modal-overlay {
     position: fixed;
@@ -227,7 +226,7 @@ body {
 }
 
 /* ========================================= */
-/* APPLICATION LAYOUT (Modern Sidebar)       */
+/* APPLICATION LAYOUT                        */
 /* ========================================= */
 .app-wrapper {
     display: flex;
@@ -351,6 +350,7 @@ button {
 .action-btn { background: var(--primary); }
 .action-btn:hover { background: var(--primary-hover); }
 .clear-btn { background: var(--danger); }
+.lock-btn { background: #6c757d; }
 .pdf-btn { background: var(--secondary); margin-top: 15px; width: 100%; }
 
 /* Switch Styling */
@@ -431,7 +431,7 @@ button {
 
 .doc-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 15px;
     margin-bottom: 20px;
 }
@@ -445,10 +445,18 @@ button {
     position: relative;
 }
 
+.doc-card.is-locked {
+    border: 1px dashed var(--danger);
+}
+
 .doc-icon {
     font-size: 2.4rem;
     color: var(--primary);
     margin-bottom: 10px;
+}
+
+.doc-card.is-locked .doc-icon {
+    color: var(--danger);
 }
 
 .doc-title {
@@ -468,7 +476,7 @@ button {
 .doc-actions {
     display: flex;
     justify-content: center;
-    gap: 8px;
+    gap: 6px;
     margin-top: 12px;
 }
 
@@ -537,14 +545,14 @@ button {
     <h1 id="welcomeTitle">Welcome to Secure Vault</h1>
 </div>
 
-<!-- FOLDER LOCK/UNLOCK MODAL OVERLAY -->
-<div class="modal-overlay" id="folderAuthModal">
+<!-- GENERAL AUTH MODAL (Folder & File Passcode Lock) -->
+<div class="modal-overlay" id="authModal">
     <div class="modal-card">
-        <i class="fa-solid fa-folder-lock" style="font-size: 3rem; color: var(--primary); margin-bottom: 10px;"></i>
-        <h2 id="modalFolderTitle">Confidential Folder</h2>
-        <p style="font-size: 0.85rem; opacity: 0.7; margin-top: 5px;" id="modalInstruction">Enter Folder PIN to Access</p>
-        <input type="password" id="folderPinInput" class="pin-input" maxlength="4" placeholder="••••">
-        <button class="action-btn" style="width: 100%;" onclick="submitFolderAuth()">Submit</button>
+        <i class="fa-solid fa-lock" id="modalIcon" style="font-size: 3rem; color: var(--primary); margin-bottom: 10px;"></i>
+        <h2 id="modalTitle">Security Authentication</h2>
+        <p style="font-size: 0.85rem; opacity: 0.7; margin-top: 5px;" id="modalInstruction">Enter Passcode</p>
+        <input type="password" id="authPinInput" class="pin-input" maxlength="4" placeholder="••••">
+        <button class="action-btn" style="width: 100%;" onclick="submitAuth()">Submit</button>
     </div>
 </div>
 
@@ -618,7 +626,7 @@ button {
             <div id="securityToggleBtnArea"></div>
         </div>
 
-        <!-- HTML Label-based File Upload Zone (Browser & Mobile Friendly) -->
+        <!-- HTML Label-based File Upload Zone -->
         <label for="fileInput" class="upload-zone">
             <i class="fa-solid fa-cloud-arrow-up" style="font-size: 2.2rem; color: var(--primary); margin-bottom: 8px;"></i>
             <p id="uploadText" style="font-weight: 600;">Click or Drag files to Upload</p>
@@ -652,10 +660,10 @@ let folderSecurity = JSON.parse(localStorage.getItem('velino_folderSecurity')) |
     'Others': { isConfidential: false, pin: null, unlocked: false }
 };
 
-// Load or Initialize Stored Documents
+// Load or Initialize Stored Documents with Per-File Lock capabilities
 let documents = JSON.parse(localStorage.getItem('velino_documents')) || [
-    { id: 1, name: "BTech_Degree.pdf", category: "Education", type: "pdf", size: "1.2 MB", date: "2026-02-15", data: null },
-    { id: 2, name: "Passport_Copy.jpg", category: "Identity", type: "image", size: "850 KB", date: "2026-03-01", data: null }
+    { id: 1, name: "BTech_Degree.pdf", category: "Education", type: "pdf", size: "1.2 MB", date: "2026-02-15", data: null, isLocked: false, pin: null },
+    { id: 2, name: "Passport_Copy.jpg", category: "Identity", type: "image", size: "850 KB", date: "2026-03-01", data: null, isLocked: true, pin: "1234" }
 ];
 
 function saveStateToStorage() {
@@ -692,26 +700,26 @@ const translations = {
     }
 };
 
-window.addEventListener("load", function () {
+/* ========================================= */
+/* SMOOTH SPLASH TO WELCOME SCREEN TRANSITION*/
+/* ========================================= */
+window.addEventListener("DOMContentLoaded", function () {
     const splash = document.getElementById("splash-screen");
     const welcome = document.getElementById("welcomeScreen");
 
     setTimeout(function () {
         splash.classList.add("fade-out");
+        
         setTimeout(function () {
-            splash.style.display = "none";
             welcome.classList.add("show");
 
             setTimeout(function () {
                 welcome.classList.remove("show");
-                setTimeout(function () {
-                    welcome.style.display = "none";
-                    updateLockBadges();
-                    renderWorkspace();
-                }, 800);
-            }, 2000);
-        }, 800);
-    }, 2200);
+                updateLockBadges();
+                renderWorkspace();
+            }, 2200);
+        }, 400);
+    }, 2000);
 });
 
 function toggleSidebar() {
@@ -727,7 +735,7 @@ function closeSidebar() {
 function selectFolder(folderName) {
     closeSidebar();
     if (folderName !== 'All' && folderSecurity[folderName].isConfidential && !folderSecurity[folderName].unlocked) {
-        promptFolderAuth(folderName, 'unlock');
+        promptAuth('folder-unlock', folderName);
         return;
     }
     activeFolder = folderName;
@@ -759,65 +767,100 @@ function updateLockBadges() {
     }
 }
 
-let authContext = { folder: null, action: null };
+/* ========================================= */
+/* SHARED AUTHENTICATION CONTROLLER          */
+/* ========================================= */
+let currentAuth = { targetType: null, targetId: null, action: null };
 
-function promptFolderAuth(folderName, action) {
-    authContext = { folder: folderName, action: action };
-    const modal = document.getElementById('folderAuthModal');
-    const title = document.getElementById('modalFolderTitle');
+function promptAuth(type, id, action = '') {
+    currentAuth = { targetType: type, targetId: id, action: action };
+    const modal = document.getElementById('authModal');
+    const title = document.getElementById('modalTitle');
     const instruction = document.getElementById('modalInstruction');
-    const pinInput = document.getElementById('folderPinInput');
+    const pinInput = document.getElementById('authPinInput');
     
     pinInput.value = '';
 
-    if (action === 'unlock') {
-        title.innerText = `Unlock ${folderName}`;
+    if (type === 'folder-unlock') {
+        title.innerText = `Unlock ${id}`;
         instruction.innerText = "Enter passcode to access folder";
-    } else if (action === 'setPin') {
-        title.innerText = `Make ${folderName} Confidential`;
+    } else if (type === 'folder-set') {
+        title.innerText = `Make ${id} Confidential`;
         instruction.innerText = "Set a 4-digit passcode for this folder";
+    } else if (type === 'file-lock') {
+        title.innerText = "Lock File";
+        instruction.innerText = "Set a 4-digit passcode for this file";
+    } else if (type === 'file-unlock' || type === 'file-view') {
+        title.innerText = "Protected File";
+        instruction.innerText = "Enter passcode to access this file";
     }
 
     modal.style.display = 'flex';
 }
 
-function submitFolderAuth() {
-    const pin = document.getElementById('folderPinInput').value;
-    const { folder, action } = authContext;
+function submitAuth() {
+    const pin = document.getElementById('authPinInput').value;
+    const { targetType, targetId, action } = currentAuth;
 
     if (!pin || pin.length !== 4) {
         alert("Please enter a valid 4-digit PIN.");
         return;
     }
 
-    if (action === 'unlock') {
-        if (pin === folderSecurity[folder].pin) {
-            folderSecurity[folder].unlocked = true;
-            document.getElementById('folderAuthModal').style.display = 'none';
-            activeFolder = folder;
+    if (targetType === 'folder-unlock') {
+        if (pin === folderSecurity[targetId].pin) {
+            folderSecurity[targetId].unlocked = true;
+            document.getElementById('authModal').style.display = 'none';
+            activeFolder = targetId;
             saveStateToStorage();
             updateLockBadges();
             updateSidebarUI();
             renderWorkspace();
         } else {
-            alert("Incorrect Folder Passcode!");
-            document.getElementById('folderPinInput').value = '';
+            alert("Incorrect Passcode!");
         }
-    } else if (action === 'setPin') {
-        folderSecurity[folder].isConfidential = true;
-        folderSecurity[folder].pin = pin;
-        folderSecurity[folder].unlocked = true;
-        document.getElementById('folderAuthModal').style.display = 'none';
+    } else if (targetType === 'folder-set') {
+        folderSecurity[targetId].isConfidential = true;
+        folderSecurity[targetId].pin = pin;
+        folderSecurity[targetId].unlocked = true;
+        document.getElementById('authModal').style.display = 'none';
         saveStateToStorage();
         updateLockBadges();
         renderWorkspace();
-        alert(`${folder} folder is now Confidential!`);
+    } else if (targetType === 'file-lock') {
+        const doc = documents.find(d => d.id === targetId);
+        if (doc) {
+            doc.isLocked = true;
+            doc.pin = pin;
+            document.getElementById('authModal').style.display = 'none';
+            saveStateToStorage();
+            renderWorkspace();
+        }
+    } else if (targetType === 'file-unlock') {
+        const doc = documents.find(d => d.id === targetId);
+        if (doc && doc.pin === pin) {
+            doc.isLocked = false;
+            doc.pin = null;
+            document.getElementById('authModal').style.display = 'none';
+            saveStateToStorage();
+            renderWorkspace();
+        } else {
+            alert("Incorrect File Passcode!");
+        }
+    } else if (targetType === 'file-view') {
+        const doc = documents.find(d => d.id === targetId);
+        if (doc && doc.pin === pin) {
+            document.getElementById('authModal').style.display = 'none';
+            openDocumentViewer(doc);
+        } else {
+            alert("Incorrect File Passcode!");
+        }
     }
 }
 
 function toggleFolderSecurity(folderName) {
     if (folderSecurity[folderName].isConfidential) {
-        if (confirm(`Do you want to make ${folderName} folder Public (Remove Passcode)?`)) {
+        if (confirm(`Remove passcode from ${folderName} folder?`)) {
             folderSecurity[folderName].isConfidential = false;
             folderSecurity[folderName].pin = null;
             folderSecurity[folderName].unlocked = false;
@@ -826,7 +869,7 @@ function toggleFolderSecurity(folderName) {
             renderWorkspace();
         }
     } else {
-        promptFolderAuth(folderName, 'setPin');
+        promptAuth('folder-set', folderName);
     }
 }
 
@@ -859,8 +902,13 @@ function renderWorkspace() {
 
     filtered.forEach(doc => {
         const card = document.createElement('div');
-        card.className = 'doc-card';
-        const iconClass = doc.type === 'pdf' ? 'fa-file-pdf' : 'fa-file-image';
+        card.className = `doc-card ${doc.isLocked ? 'is-locked' : ''}`;
+        
+        let iconClass = doc.type === 'pdf' ? 'fa-file-pdf' : 'fa-file-image';
+        if (doc.isLocked) iconClass = 'fa-file-shield';
+
+        const lockBtnIcon = doc.isLocked ? 'fa-lock-open' : 'fa-lock';
+        const lockBtnClass = doc.isLocked ? 'lock-btn' : 'lock-btn';
 
         card.innerHTML = `
             <div class="doc-icon"><i class="fa-solid ${iconClass}"></i></div>
@@ -869,6 +917,7 @@ function renderWorkspace() {
             <div class="doc-meta">${doc.size}</div>
             <div class="doc-actions">
                 <button class="action-btn doc-btn" onclick="viewDoc(${doc.id})"><i class="fa-solid fa-eye"></i></button>
+                <button class="${lockBtnClass} doc-btn" onclick="toggleFileLock(${doc.id})"><i class="fa-solid ${lockBtnIcon}"></i></button>
                 <button class="clear-btn doc-btn" onclick="deleteDoc(${doc.id})"><i class="fa-solid fa-trash"></i></button>
             </div>
         `;
@@ -895,23 +944,43 @@ function handleFileUpload(event) {
             type: file.type.includes('pdf') ? 'pdf' : 'image',
             size: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
             date: new Date().toISOString().split('T')[0],
-            data: e.target.result // Base64 data string
+            data: e.target.result,
+            isLocked: false,
+            pin: null
         };
 
         documents.push(newDoc);
         saveStateToStorage();
         renderWorkspace();
-        event.target.value = ''; // Reset input
-        alert(`File "${file.name}" saved securely in ${activeFolder}!`);
+        event.target.value = '';
     };
 
     reader.readAsDataURL(file);
+}
+
+function toggleFileLock(id) {
+    const doc = documents.find(d => d.id === id);
+    if (!doc) return;
+
+    if (doc.isLocked) {
+        promptAuth('file-unlock', id);
+    } else {
+        promptAuth('file-lock', id);
+    }
 }
 
 function viewDoc(id) {
     const doc = documents.find(d => d.id === id);
     if (!doc) return;
 
+    if (doc.isLocked) {
+        promptAuth('file-view', id);
+    } else {
+        openDocumentViewer(doc);
+    }
+}
+
+function openDocumentViewer(doc) {
     if (doc.data) {
         const win = window.open();
         if (win) {
@@ -925,6 +994,12 @@ function viewDoc(id) {
 }
 
 function deleteDoc(id) {
+    const doc = documents.find(d => d.id === id);
+    if (doc && doc.isLocked) {
+        alert("Please unlock this document first before deleting.");
+        return;
+    }
+
     documents = documents.filter(d => d.id !== id);
     saveStateToStorage();
     renderWorkspace();
@@ -976,7 +1051,8 @@ function downloadPDFReport() {
     let y = 55;
     documents.forEach((d, index) => {
         doc.setFontSize(10);
-        doc.text(`${index + 1}. ${d.name} | Folder: ${d.category} | Size: ${d.size} | Date: ${d.date}`, 14, y);
+        const lockStatus = d.isLocked ? "[Locked]" : "[Public]";
+        doc.text(`${index + 1}. ${d.name} ${lockStatus} | Folder: ${d.category} | Size: ${d.size} | Date: ${d.date}`, 14, y);
         y += 10;
     });
 
