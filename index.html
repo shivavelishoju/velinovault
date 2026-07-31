@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VELINO Secure Vault Pro</title>
+
+<!-- FontAwesome Icons & jsPDF -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+:root {
+    --bg: #f4f7fe;
+    --card: #ffffff;
+    --text: #1b2559;
+    --primary: #007bff;
+    --primary-hover: #0056b3;
+    --secondary: #28a745;
+    --danger: #dc3545;
+    --border: #e9ecef;
+    --sidebar-bg: #ffffff;
+    --sidebar-width: 260px;
+    --shadow: 0px 18px 40px rgba(112, 144, 176, 0.12);
+}
+
+.dark {
+    --bg: #0b1437;
+    --card: #111c44;
+    --text: #ffffff;
+    --primary: #007bff;
+    --primary-hover: #38bdf8;
+    --secondary: #00d26a;
+    --danger: #ef4444;
+    --border: #222d5a;
+    --sidebar-bg: #111c44;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    user-select: none;
+}
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    overflow-x: hidden;
+    transition: background 0.3s, color 0.3s;
+}
+
+/* ========================================= */
+/* RESPONSIVE SPLASH SCREEN                  */
+/* ========================================= */
+#splash-screen {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(to bottom, #0d67c8, #07427c);
+    overflow: hidden;
+    z-index: 999999;
+    opacity: 1;
+    transition: opacity .8s ease;
+}
+
+#splash-screen.fade-out {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.splash-line {
+    width: min(1000px, 90vw);
+    height: 2px;
+    margin: 18px 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.95), transparent);
+    animation: lineGlow 2s ease-in-out infinite;
+}
+
+@keyframes lineGlow {
+    0%, 100% { opacity: .35; transform: scaleX(.9); }
+    50% { opacity: 1; transform: scaleX(1); }
+}
+
+.apple-logo-text {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: nowrap;
+    font-size: clamp(1.8rem, 8vw, 4rem);
+    font-weight: 100;
+    letter-spacing: clamp(4px, .8vw, 12px);
+    color: #fff;
+    text-align: center;
+    perspective: 1000px;
+}
+
+.apple-logo-text span {
+    display: inline-block;
+    opacity: 0;
+    transform: rotateY(90deg);
+    animation: letterRotate .9s ease forwards;
+}
+
+.apple-logo-text span:nth-child(1){animation-delay:.1s;}
+.apple-logo-text span:nth-child(2){animation-delay:.2s;}
+.apple-logo-text span:nth-child(3){animation-delay:.3s;}
+.apple-logo-text span:nth-child(4){animation-delay:.4s;}
+.apple-logo-text span:nth-child(5){animation-delay:.5s;}
+.apple-logo-text span:nth-child(6){animation-delay:.6s;}
+.apple-logo-text span:nth-child(7){animation-delay:.7s;}
+.apple-logo-text span:nth-child(8){animation-delay:.8s;}
+.apple-logo-text span:nth-child(9){animation-delay:.9s;}
+.apple-logo-text span:nth-child(10){animation-delay:1s;}
+.apple-logo-text span:nth-child(11){animation-delay:1.1s;}
+.apple-logo-text span:nth-child(12){animation-delay:1.2s;}
+.apple-logo-text span:nth-child(13){animation-delay:1.3s;}
+.apple-logo-text span:nth-child(14){animation-delay:1.4s;}
+.apple-logo-text span:nth-child(15){animation-delay:1.5s;}
+.apple-logo-text span:nth-child(16){animation-delay:1.6s;}
+
+@keyframes letterRotate {
+    from { opacity: 0; transform: rotateY(90deg); }
+    to { opacity: 1; transform: rotateY(0deg); }
+}
+
+.developer-credit {
+    margin-top: 18px;
+    color: #fff;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-align: center;
+    padding: 0 20px;
+}
+
+/* ========================================= */
+/* WELCOME SCREEN                            */
+/* ========================================= */
+#welcomeScreen {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(to bottom, #0d67c8, #07427c);
+    z-index: 999999;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .8s ease;
+    overflow: hidden;
+}
+
+#welcomeScreen.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.ms-logo {
+    width: 90px;
+    height: 90px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 35px;
+}
+
+.ms-logo div { width: 42px; height: 42px; }
+.red { background: #f25022; }
+.green { background: #7fba00; }
+.blue { background: #00a4ef; }
+.yellow { background: #ffb900; }
+
+#welcomeScreen h1 {
+    margin: 0;
+    color: #fff;
+    font-weight: 200;
+    font-size: clamp(26px, 5vw, 56px);
+    letter-spacing: 2px;
+    text-align: center;
+    padding: 0 20px;
+    line-height: 1.3;
+}
+
+/* ========================================= */
+/* MODAL OVERLAY (Folder Passcode Lock)       */
+/* ========================================= */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+    z-index: 9999;
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-card {
+    background: var(--card);
+    padding: 30px;
+    border-radius: 20px;
+    text-align: center;
+    width: 90%;
+    max-width: 380px;
+    box-shadow: var(--shadow);
+}
+
+.pin-input {
+    width: 100%;
+    padding: 12px;
+    margin: 15px 0;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    text-align: center;
+    font-size: 1.5rem;
+    letter-spacing: 8px;
+}
+
+/* ========================================= */
+/* APPLICATION LAYOUT (Modern Sidebar)       */
+/* ========================================= */
+.app-wrapper {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Sidebar Styles */
+.sidebar {
+    width: var(--sidebar-width);
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 25px 15px;
+    z-index: 1000;
+    transition: transform 0.3s ease;
+}
+
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 30px;
+    padding-left: 10px;
+}
+
+.sidebar-menu {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    color: var(--text);
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+}
+
+.menu-item-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.menu-item:hover, .menu-item.active {
+    background: rgba(0, 123, 255, 0.1);
+    color: var(--primary);
+}
+
+.badge-lock {
+    font-size: 0.8rem;
+    color: var(--danger);
+}
+
+.badge-unlock {
+    font-size: 0.8rem;
+    color: var(--secondary);
+}
+
+/* Main Workspace */
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 25px;
+}
+
+.top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.mobile-nav-toggle {
+    display: none;
+    font-size: 1.5rem;
+    background: none;
+    border: none;
+    color: var(--text);
+    cursor: pointer;
+    width: auto;
+    padding: 0;
+}
+
+.top-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+select, input, button {
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 15px;
+    outline: none;
+}
+
+input, select {
+    background: var(--card);
+    color: var(--text);
+}
+
+button {
+    cursor: pointer;
+    color: white;
+    font-weight: bold;
+    border: none;
+    transition: background 0.2s;
+}
+
+.action-btn { background: var(--primary); }
+.action-btn:hover { background: var(--primary-hover); }
+.clear-btn { background: var(--danger); }
+.pdf-btn { background: var(--secondary); margin-top: 15px; width: 100%; }
+
+/* Switch Styling */
+.theme-switch-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 52px;
+    height: 28px;
+}
+
+.switch input { opacity: 0; width: 0; height: 0; }
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: #cfcfcf;
+    transition: .35s;
+    border-radius: 50px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    width: 20px;
+    height: 20px;
+    left: 4px;
+    bottom: 4px;
+    background: #fff;
+    border-radius: 50%;
+    transition: .35s;
+    box-shadow: 0 2px 8px rgba(0,0,0,.25);
+}
+
+.switch input:checked + .slider { background: #007bff; }
+.switch input:checked + .slider:before { transform: translateX(24px); }
+
+/* Folder Header Bar */
+.folder-header {
+    background: var(--card);
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.folder-title-area {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Upload & Content Grid */
+.upload-zone {
+    border: 2px dashed var(--primary);
+    padding: 25px;
+    border-radius: 16px;
+    text-align: center;
+    cursor: pointer;
+    background: rgba(0, 123, 255, 0.03);
+    margin-bottom: 20px;
+    transition: border-color 0.2s;
+}
+
+.upload-zone:hover {
+    background: rgba(0, 123, 255, 0.06);
+}
+
+.doc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.doc-card {
+    background: var(--card);
+    padding: 18px;
+    border-radius: 16px;
+    text-align: center;
+    box-shadow: var(--shadow);
+    position: relative;
+}
+
+.doc-icon {
+    font-size: 2.4rem;
+    color: var(--primary);
+    margin-bottom: 10px;
+}
+
+.doc-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.doc-meta {
+    font-size: 0.75rem;
+    opacity: 0.7;
+    margin-top: 4px;
+}
+
+.doc-actions {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.doc-btn {
+    width: auto;
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    border-radius: 8px;
+}
+
+.footer {
+    margin-top: auto;
+    padding-top: 20px;
+    text-align: center;
+    font-size: 13px;
+    opacity: .8;
+}
+
+/* Responsive Mobile Layout */
+.sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+    display: none;
+}
+
+@media(max-width:768px){
+    .sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        transform: translateX(-100%);
+        box-shadow: var(--shadow);
+    }
+    .sidebar.open {
+        transform: translateX(0);
+    }
+    .sidebar-backdrop.active {
+        display: block;
+    }
+    .mobile-nav-toggle {
+        display: block;
+    }
+    .main-content {
+        padding: 15px;
+    }
+}
+</style>
+</head>
+<body>
+
+<!-- SPLASH SCREEN -->
+<div id="splash-screen">
+    <div class="splash-line"></div>
+    <div class="apple-logo-text">
+        <span>V</span><span>E</span><span>L</span><span>I</span><span>N</span><span>O</span>
+        <span>&nbsp;</span>
+        <span>E</span><span>C</span><span>O</span><span>S</span><span>Y</span><span>S</span><span>T</span><span>E</span><span>M</span>
+    </div>
+    <div class="splash-line"></div>
+    <div class="developer-credit">Full Stack Developer • AI Enthusiast • Innovator</div>
+    <div class="developer-credit">Developed by Shiva Velishoju</div>
+</div>
+
+<!-- WELCOME SCREEN -->
+<div id="welcomeScreen">
+    <div class="ms-logo">
+        <div class="red"></div>
+        <div class="green"></div>
+        <div class="blue"></div>
+        <div class="yellow"></div>
+    </div>
+    <h1 id="welcomeTitle">Welcome to Secure Vault</h1>
+</div>
+
+<!-- FOLDER LOCK/UNLOCK MODAL OVERLAY -->
+<div class="modal-overlay" id="folderAuthModal">
+    <div class="modal-card">
+        <i class="fa-solid fa-folder-lock" style="font-size: 3rem; color: var(--primary); margin-bottom: 10px;"></i>
+        <h2 id="modalFolderTitle">Confidential Folder</h2>
+        <p style="font-size: 0.85rem; opacity: 0.7; margin-top: 5px;" id="modalInstruction">Enter Folder PIN to Access</p>
+        <input type="password" id="folderPinInput" class="pin-input" maxlength="4" placeholder="••••">
+        <button class="action-btn" style="width: 100%;" onclick="submitFolderAuth()">Submit</button>
+    </div>
+</div>
+
+<!-- MAIN APP CONTAINER -->
+<div class="app-wrapper">
+    
+    <!-- Mobile Sidebar Backdrop -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+
+    <!-- MODERN SIDEBAR NAVIGATION -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <i class="fa-solid fa-vault"></i> SecureVault
+        </div>
+        
+        <ul class="sidebar-menu">
+            <li class="menu-item active" onclick="selectFolder('All')">
+                <div class="menu-item-left"><i class="fa-solid fa-border-all"></i> <span id="menuAll">All Documents</span></div>
+            </li>
+            <li class="menu-item" onclick="selectFolder('Education')">
+                <div class="menu-item-left"><i class="fa-solid fa-graduation-cap"></i> <span id="menuEdu">Education</span></div>
+                <i class="fa-solid fa-lock badge-lock" id="lock-Education" style="display:none;"></i>
+            </li>
+            <li class="menu-item" onclick="selectFolder('Identity')">
+                <div class="menu-item-left"><i class="fa-solid fa-id-card"></i> <span id="menuId">Identity</span></div>
+                <i class="fa-solid fa-lock badge-lock" id="lock-Identity" style="display:none;"></i>
+            </li>
+            <li class="menu-item" onclick="selectFolder('Property')">
+                <div class="menu-item-left"><i class="fa-solid fa-house-chimney"></i> <span id="menuProp">Property</span></div>
+                <i class="fa-solid fa-lock badge-lock" id="lock-Property" style="display:none;"></i>
+            </li>
+            <li class="menu-item" onclick="selectFolder('Employment')">
+                <div class="menu-item-left"><i class="fa-solid fa-briefcase"></i> <span id="menuEmp">Employment</span></div>
+                <i class="fa-solid fa-lock badge-lock" id="lock-Employment" style="display:none;"></i>
+            </li>
+            <li class="menu-item" onclick="selectFolder('Financial')">
+                <div class="menu-item-left"><i class="fa-solid fa-building-columns"></i> <span id="menuFin">Financial</span></div>
+                <i class="fa-solid fa-lock badge-lock" id="lock-Financial" style="display:none;"></i>
+            </li>
+            <li class="menu-item" onclick="selectFolder('Others')">
+                <div class="menu-item-left"><i class="fa-solid fa-folder-open"></i> <span id="menuOth">Others</span></div>
+                <i class="fa-solid fa-lock badge-lock" id="lock-Others" style="display:none;"></i>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- WORKSPACE AREA -->
+    <main class="main-content">
+        <!-- Top Navigation Controls -->
+        <header class="top-bar">
+            <button class="mobile-nav-toggle" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+
+            <div class="top-actions">
+                <select id="language" onchange="changeLanguage()">
+                    <option value="en">English</option>
+                    <option value="te">తెలుగు</option>
+                </select>
+
+                <div class="theme-switch-container">
+                    <label class="switch">
+                        <input type="checkbox" id="themeSwitch" onchange="toggleTheme()">
+                        <span class="slider"></span>
+                    </label>
+                    <span id="themeIcon">☀️</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Folder Header Bar with Confidentiality Controls -->
+        <div class="folder-header">
+            <div class="folder-title-area">
+                <h2 id="currentFolderName">All Documents</h2>
+            </div>
+            <div id="securityToggleBtnArea">
+                <!-- Toggle Confidential Button appended dynamically -->
+            </div>
+        </div>
+
+        <!-- Document Import Upload Zone -->
+        <div class="upload-zone" onclick="triggerFileInput()">
+            <i class="fa-solid fa-cloud-arrow-up" style="font-size: 2.2rem; color: var(--primary); margin-bottom: 8px;"></i>
+            <p id="uploadText" style="font-weight: 600;">Click or Drag files to Upload</p>
+            <span style="font-size: 0.8rem; opacity: 0.7;">Supports PDF, PNG, JPG</span>
+            <input type="file" id="fileInput" style="display: none;" onchange="handleFileUpload(event)">
+        </div>
+
+        <!-- Document Cards Grid -->
+        <div class="doc-grid" id="documentGrid"></div>
+
+        <!-- Inventory Report Generator -->
+        <button class="pdf-btn" onclick="downloadPDFReport()" id="pdfBtn">
+            📄 Download Vault Inventory Report
+        </button>
+
+        <footer class="footer" id="footerText">
+            Developed by shiva velishoju
+        </footer>
+    </main>
+
+</div>
+
+<script>
+// --- App State Management ---
+let activeFolder = 'All';
+
+// Configuration for Folder Security (Public vs Confidential with Passcode)
+let folderSecurity = {
+    'Education': { isConfidential: false, pin: null, unlocked: false },
+    'Identity': { isConfidential: true, pin: '1234', unlocked: false },
+    'Property': { isConfidential: false, pin: null, unlocked: false },
+    'Employment': { isConfidential: false, pin: null, unlocked: false },
+    'Financial': { isConfidential: false, pin: null, unlocked: false },
+    'Others': { isConfidential: false, pin: null, unlocked: false }
+};
+
+let documents = [
+    { id: 1, name: "BTech_Degree.pdf", category: "Education", type: "pdf", size: "1.2 MB", date: "2026-02-15" },
+    { id: 2, name: "Passport_Copy.jpg", category: "Identity", type: "image", size: "850 KB", date: "2026-03-01" },
+    { id: 3, name: "Land_Sale_Deed.pdf", category: "Property", type: "pdf", size: "4.5 MB", date: "2026-01-10" }
+];
+
+// --- Translations ---
+const translations = {
+    en: {
+        welcome: "Welcome to Secure Vault",
+        upload: "Click or Drag files to Upload",
+        all: "All Documents",
+        edu: "Education",
+        id: "Identity",
+        prop: "Property",
+        emp: "Employment",
+        fin: "Financial",
+        oth: "Others",
+        pdf: "📄 Download Vault Inventory Report",
+        footer: "Developed by shiva velishoju"
+    },
+    te: {
+        welcome: "సెక్యూర్ వాల్ట్‌కు స్వాగతం",
+        upload: "ఫైళ్లను అప్‌లోడ్ చేయడానికి క్లిక్ చేయండి",
+        all: "అన్ని రకాల పత్రాలు",
+        edu: "విద్య సార్టిఫికెట్లు",
+        id: "గుర్తింపు కార్డులు",
+        prop: "ఆస్తి పత్రాలు",
+        emp: "ఉద్యోగ ధృవీకరణ పత్రాలు",
+        fin: "ఆర్థిక పత్రాలు",
+        oth: "ఇతరం",
+        pdf: "📄 డాక్యుమెంట్ నివేదిక డౌన్‌లోడ్",
+        footer: "Developed by shiva velishoju"
+    }
+};
+
+// --- Initialization & Splash Sequence ---
+window.addEventListener("load", function () {
+    const splash = document.getElementById("splash-screen");
+    const welcome = document.getElementById("welcomeScreen");
+
+    setTimeout(function () {
+        splash.classList.add("fade-out");
+        setTimeout(function () {
+            splash.style.display = "none";
+            welcome.classList.add("show");
+
+            setTimeout(function () {
+                welcome.classList.remove("show");
+                setTimeout(function () {
+                    welcome.style.display = "none";
+                    updateLockBadges();
+                    renderWorkspace();
+                }, 800);
+            }, 2000);
+        }, 800);
+    }, 2200);
+});
+
+// --- Sidebar Navigation Control ---
+function toggleSidebar() {
+    document.getElementById("sidebar").classList.toggle("open");
+    document.getElementById("sidebarBackdrop").classList.toggle("active");
+}
+
+function closeSidebar() {
+    document.getElementById("sidebar").classList.remove("open");
+    document.getElementById("sidebarBackdrop").classList.remove("active");
+}
+
+function selectFolder(folderName) {
+    closeSidebar();
+    
+    // Check if folder is confidential & currently locked
+    if (folderName !== 'All' && folderSecurity[folderName].isConfidential && !folderSecurity[folderName].unlocked) {
+        promptFolderAuth(folderName, 'unlock');
+        return;
+    }
+
+    activeFolder = folderName;
+    updateSidebarUI();
+    renderWorkspace();
+}
+
+function updateSidebarUI() {
+    const items = document.querySelectorAll('.menu-item');
+    items.forEach(item => item.classList.remove('active'));
+
+    const activeIndex = ['All', 'Education', 'Identity', 'Property', 'Employment', 'Financial', 'Others'].indexOf(activeFolder);
+    if (activeIndex !== -1) {
+        items[activeIndex].classList.add('active');
+    }
+}
+
+function updateLockBadges() {
+    for (let folder in folderSecurity) {
+        const badge = document.getElementById(`lock-${folder}`);
+        if (badge) {
+            if (folderSecurity[folder].isConfidential) {
+                badge.style.display = 'inline-block';
+                badge.className = folderSecurity[folder].unlocked ? 'fa-solid fa-lock-open badge-unlock' : 'fa-solid fa-lock badge-lock';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+    }
+}
+
+// --- Individual Folder Passcode Engine ---
+let authContext = { folder: null, action: null };
+
+function promptFolderAuth(folderName, action) {
+    authContext = { folder: folderName, action: action };
+    const modal = document.getElementById('folderAuthModal');
+    const title = document.getElementById('modalFolderTitle');
+    const instruction = document.getElementById('modalInstruction');
+    const pinInput = document.getElementById('folderPinInput');
+    
+    pinInput.value = '';
+
+    if (action === 'unlock') {
+        title.innerText = `Unlock ${folderName}`;
+        instruction.innerText = "Enter passcode to access folder";
+    } else if (action === 'setPin') {
+        title.innerText = `Make ${folderName} Confidential`;
+        instruction.innerText = "Set a 4-digit passcode for this folder";
+    }
+
+    modal.style.display = 'flex';
+}
+
+function submitFolderAuth() {
+    const pin = document.getElementById('folderPinInput').value;
+    const { folder, action } = authContext;
+
+    if (!pin || pin.length !== 4) {
+        alert("Please enter a valid 4-digit PIN.");
+        return;
+    }
+
+    if (action === 'unlock') {
+        if (pin === folderSecurity[folder].pin) {
+            folderSecurity[folder].unlocked = true;
+            document.getElementById('folderAuthModal').style.display = 'none';
+            activeFolder = folder;
+            updateLockBadges();
+            updateSidebarUI();
+            renderWorkspace();
+        } else {
+            alert("Incorrect Folder Passcode!");
+            document.getElementById('folderPinInput').value = '';
+        }
+    } else if (action === 'setPin') {
+        folderSecurity[folder].isConfidential = true;
+        folderSecurity[folder].pin = pin;
+        folderSecurity[folder].unlocked = true;
+        document.getElementById('folderAuthModal').style.display = 'none';
+        updateLockBadges();
+        renderWorkspace();
+        alert(`${folder} folder is now Confidential!`);
+    }
+}
+
+function toggleFolderSecurity(folderName) {
+    if (folderSecurity[folderName].isConfidential) {
+        // Switch to Public
+        if (confirm(`Do you want to make ${folderName} folder Public (Remove Passcode)?`)) {
+            folderSecurity[folderName].isConfidential = false;
+            folderSecurity[folderName].pin = null;
+            folderSecurity[folderName].unlocked = false;
+            updateLockBadges();
+            renderWorkspace();
+        }
+    } else {
+        // Switch to Confidential
+        promptFolderAuth(folderName, 'setPin');
+    }
+}
+
+// --- Workspace & Document Rendering ---
+function renderWorkspace() {
+    document.getElementById('currentFolderName').innerText = activeFolder === 'All' ? 'All Documents' : activeFolder;
+    
+    // Security Toggle Button Render
+    const btnArea = document.getElementById('securityToggleBtnArea');
+    btnArea.innerHTML = '';
+
+    if (activeFolder !== 'All') {
+        const isConf = folderSecurity[activeFolder].isConfidential;
+        const btn = document.createElement('button');
+        btn.className = isConf ? 'clear-btn' : 'action-btn';
+        btn.style.padding = '8px 14px';
+        btn.style.fontSize = '0.85rem';
+        btn.innerHTML = isConf ? '<i class="fa-solid fa-lock-open"></i> Make Public' : '<i class="fa-solid fa-lock"></i> Make Confidential';
+        btn.onclick = () => toggleFolderSecurity(activeFolder);
+        btnArea.appendChild(btn);
+    }
+
+    // Grid Render
+    const grid = document.getElementById('documentGrid');
+    grid.innerHTML = '';
+
+    const filtered = activeFolder === 'All' ? documents : documents.filter(d => d.category === activeFolder);
+
+    if (filtered.length === 0) {
+        grid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; opacity: 0.6; padding: 30px;">No documents stored in this folder.</p>`;
+        return;
+    }
+
+    filtered.forEach(doc => {
+        const card = document.createElement('div');
+        card.className = 'doc-card';
+        const iconClass = doc.type === 'pdf' ? 'fa-file-pdf' : 'fa-file-image';
+
+        card.innerHTML = `
+            <div class="doc-icon"><i class="fa-solid ${iconClass}"></i></div>
+            <div class="doc-title">${doc.name}</div>
+            <div class="doc-meta">${doc.category}</div>
+            <div class="doc-meta">${doc.size}</div>
+            <div class="doc-actions">
+                <button class="action-btn doc-btn" onclick="viewDoc('${doc.name}')"><i class="fa-solid fa-eye"></i></button>
+                <button class="clear-btn doc-btn" onclick="deleteDoc(${doc.id})"><i class="fa-solid fa-trash"></i></button>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+}
+
+// --- Document File Actions ---
+function triggerFileInput() {
+    if (activeFolder === 'All') {
+        alert("Please select a specific folder from the sidebar to upload documents into.");
+        return;
+    }
+    document.getElementById('fileInput').click();
+}
+
+function handleFileUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const newDoc = {
+        id: Date.now(),
+        name: file.name,
+        category: activeFolder,
+        type: file.type.includes('pdf') ? 'pdf' : 'image',
+        size: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
+        date: new Date().toISOString().split('T')[0]
+    };
+
+    documents.push(newDoc);
+    renderWorkspace();
+    alert(`File "${file.name}" added to ${activeFolder}!`);
+}
+
+function viewDoc(name) {
+    alert(`Decrypting and loading ${name} in memory...`);
+}
+
+function deleteDoc(id) {
+    documents = documents.filter(d => d.id !== id);
+    renderWorkspace();
+}
+
+// --- Theme & Language Toggles ---
+function toggleTheme() {
+    document.body.classList.toggle("dark");
+    const isDark = document.body.classList.contains("dark");
+    document.getElementById("themeSwitch").checked = isDark;
+    document.getElementById("themeIcon").innerText = isDark ? "☀️" : "🌙";
+}
+
+function changeLanguage() {
+    const lang = document.getElementById("language").value;
+    const t = translations[lang];
+
+    document.getElementById("welcomeTitle").innerText = t.welcome;
+    document.getElementById("uploadText").innerText = t.upload;
+    document.getElementById("menuAll").innerText = t.all;
+    document.getElementById("menuEdu").innerText = t.edu;
+    document.getElementById("menuId").innerText = t.id;
+    document.getElementById("menuProp").innerText = t.prop;
+    document.getElementById("menuEmp").innerText = t.emp;
+    document.getElementById("menuFin").innerText = t.fin;
+    document.getElementById("menuOth").innerText = t.oth;
+    document.getElementById("pdfBtn").innerText = t.pdf;
+    document.getElementById("footerText").innerText = t.footer;
+}
+
+// --- PDF Inventory Export ---
+function downloadPDFReport() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const date = new Date().toLocaleString();
+
+    doc.setFillColor(0, 123, 255);
+    doc.rect(0, 0, 210, 25, "F");
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(18);
+    doc.text("VELINO Secure Vault Inventory", 105, 16, { align: "center" });
+
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(10);
+    doc.text("Generated: " + date, 14, 35);
+
+    doc.setFontSize(12);
+    doc.text("Vault Summary:", 14, 45);
+
+    let y = 55;
+    documents.forEach((d, index) => {
+        doc.setFontSize(10);
+        doc.text(`${index + 1}. ${d.name} | Folder: ${d.category} | Size: ${d.size} | Date: ${d.date}`, 14, y);
+        y += 10;
+    });
+
+    doc.setFontSize(10);
+    doc.setTextColor(120);
+    doc.text("Developed by Shiva Velishoju", 105, 285, { align: "center" });
+
+    doc.save("Vault_Inventory_Report.pdf");
+}
+
+// Prevent Context Menu
+document.addEventListener('contextmenu', e => e.preventDefault());
+</script>
+</body>
+</html>
