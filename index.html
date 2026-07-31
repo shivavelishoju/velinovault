@@ -161,6 +161,12 @@ body {
     visibility: visible;
 }
 
+#welcomeScreen.fade-out {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
 .ms-logo {
     width: 90px;
     height: 90px;
@@ -210,10 +216,9 @@ body {
     width: 90%;
     max-width: 380px;
     box-shadow: var(--shadow);
-    position: relative; /* Position context for close button */
+    position: relative;
 }
 
-/* Modal Close Button */
 .modal-close-btn {
     position: absolute;
     top: 15px;
@@ -256,6 +261,12 @@ body {
     width: 100vw;
     height: 100vh;
     overflow: hidden;
+    opacity: 0; /* Hidden initially until splash & welcome finish */
+    transition: opacity 0.8s ease;
+}
+
+.app-wrapper.visible {
+    opacity: 1;
 }
 
 .sidebar {
@@ -516,6 +527,7 @@ button {
     text-align: center;
     font-size: 13px;
     opacity: .8;
+    width: 100%;
 }
 
 .sidebar-backdrop {
@@ -544,7 +556,7 @@ button {
 </head>
 <body>
 
-<!-- SPLASH SCREEN -->
+<!-- 1. SPLASH SCREEN (VELINO Ecosystem) -->
 <div id="splash-screen">
     <div class="splash-line"></div>
     <div class="apple-logo-text">
@@ -557,7 +569,7 @@ button {
     <div class="developer-credit">Developed by Shiva Velishoju</div>
 </div>
 
-<!-- WELCOME SCREEN -->
+<!-- 2. WELCOME SCREEN (Welcome to Secure Vault) -->
 <div id="welcomeScreen">
     <div class="ms-logo">
         <div class="red"></div>
@@ -571,9 +583,7 @@ button {
 <!-- GENERAL AUTH MODAL (Folder & File Passcode Lock) -->
 <div class="modal-overlay" id="authModal" onclick="if(event.target === this) closeAuthModal()">
     <div class="modal-card">
-        <!-- Close Button -->
         <button class="modal-close-btn" onclick="closeAuthModal()" title="Close">&times;</button>
-        
         <i class="fa-solid fa-lock" id="modalIcon" style="font-size: 3rem; color: var(--primary); margin-bottom: 10px;"></i>
         <h2 id="modalTitle">Security Authentication</h2>
         <p style="font-size: 0.85rem; opacity: 0.7; margin-top: 5px;" id="modalInstruction">Enter Passcode</p>
@@ -582,8 +592,8 @@ button {
     </div>
 </div>
 
-<!-- MAIN APP CONTAINER -->
-<div class="app-wrapper">
+<!-- 3. MAIN APP CONTAINER -->
+<div class="app-wrapper" id="appWrapper">
     
     <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
 
@@ -722,23 +732,33 @@ const translations = {
     }
 };
 
+/* SEQUENCED SCREEN TRANSITIONS: SPLASH -> WELCOME -> MAIN UI */
 window.addEventListener("DOMContentLoaded", function () {
     const splash = document.getElementById("splash-screen");
     const welcome = document.getElementById("welcomeScreen");
+    const mainApp = document.getElementById("appWrapper");
 
+    // 1. Display Splash Screen for 2.5s, then fade out
     setTimeout(function () {
         splash.classList.add("fade-out");
-        
+
+        // 2. Display Welcome Screen after Splash fades
         setTimeout(function () {
             welcome.classList.add("show");
 
+            // 3. Keep Welcome Screen visible for 2.2s, then fade out & reveal Main UI
             setTimeout(function () {
-                welcome.classList.remove("show");
+                welcome.classList.add("fade-out");
+                
+                // Show Main UI Workspace
+                mainApp.classList.add("visible");
                 updateLockBadges();
                 renderWorkspace();
             }, 2200);
-        }, 400);
-    }, 2000);
+
+        }, 400); // Small transition offset
+
+    }, 2500); // Splash display time
 });
 
 function toggleSidebar() {
