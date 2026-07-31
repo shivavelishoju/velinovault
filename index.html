@@ -42,6 +42,7 @@
     box-sizing: border-box;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     user-select: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -54,7 +55,7 @@ body {
 }
 
 /* ========================================= */
-/* SPLASH & WELCOME SCREENS                   */
+/* RESPONSIVE SPLASH & WELCOME SCREENS       */
 /* ========================================= */
 #splash-screen {
     position: fixed;
@@ -67,6 +68,7 @@ body {
     overflow: hidden;
     z-index: 999999;
     opacity: 1;
+    padding: 20px;
     transition: opacity 0.8s ease, visibility 0.8s ease;
 }
 
@@ -77,9 +79,9 @@ body {
 }
 
 .splash-line {
-    width: min(1000px, 90vw);
+    width: min(1000px, 85vw);
     height: 2px;
-    margin: 18px 0;
+    margin: 15px 0;
     background: linear-gradient(90deg, transparent, rgba(255,255,255,.95), transparent);
     animation: lineGlow 2s ease-in-out infinite;
 }
@@ -93,13 +95,14 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    flex-wrap: nowrap;
-    font-size: clamp(1.8rem, 8vw, 4rem);
+    flex-wrap: wrap;
+    font-size: clamp(1.4rem, 6vw, 3.8rem);
     font-weight: 100;
-    letter-spacing: clamp(4px, .8vw, 12px);
+    letter-spacing: clamp(2px, 0.6vw, 10px);
     color: #fff;
     text-align: center;
     perspective: 1000px;
+    max-width: 100%;
 }
 
 .apple-logo-text span {
@@ -132,12 +135,12 @@ body {
 }
 
 .developer-credit {
-    margin-top: 18px;
+    margin-top: 12px;
     color: #fff;
-    font-size: 12px;
-    letter-spacing: 2px;
+    font-size: clamp(10px, 2.5vw, 13px);
+    letter-spacing: 1.5px;
     text-align: center;
-    padding: 0 20px;
+    padding: 0 15px;
 }
 
 /* WELCOME SCREEN */
@@ -152,6 +155,7 @@ body {
     z-index: 999998;
     opacity: 0;
     visibility: hidden;
+    padding: 20px;
     transition: opacity 0.8s ease, visibility 0.8s ease;
     overflow: hidden;
 }
@@ -168,16 +172,16 @@ body {
 }
 
 .ms-logo {
-    width: 90px;
-    height: 90px;
+    width: clamp(60px, 15vw, 90px);
+    height: clamp(60px, 15vw, 90px);
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr 1fr;
-    gap: 6px;
-    margin-bottom: 35px;
+    gap: clamp(4px, 1vw, 6px);
+    margin-bottom: clamp(20px, 4vw, 35px);
 }
 
-.ms-logo div { width: 42px; height: 42px; }
+.ms-logo div { width: 100%; height: 100%; }
 .red { background: #f25022; }
 .green { background: #7fba00; }
 .blue { background: #00a4ef; }
@@ -187,10 +191,10 @@ body {
     margin: 0;
     color: #fff;
     font-weight: 200;
-    font-size: clamp(26px, 5vw, 56px);
+    font-size: clamp(22px, 5vw, 56px);
     letter-spacing: 2px;
     text-align: center;
-    padding: 0 20px;
+    padding: 0 15px;
     line-height: 1.3;
 }
 
@@ -206,14 +210,15 @@ body {
     display: none;
     justify-content: center;
     align-items: center;
+    padding: 15px;
 }
 
 .modal-card {
     background: var(--card);
-    padding: 30px;
+    padding: clamp(20px, 5vw, 30px);
     border-radius: 20px;
     text-align: center;
-    width: 90%;
+    width: 100%;
     max-width: 380px;
     box-shadow: var(--shadow);
     position: relative;
@@ -230,7 +235,7 @@ body {
     color: var(--text);
     opacity: 0.6;
     cursor: pointer;
-    padding: 0;
+    padding: 5px;
     line-height: 1;
     transition: opacity 0.2s, transform 0.2s;
 }
@@ -254,14 +259,14 @@ body {
 }
 
 /* ========================================= */
-/* APPLICATION LAYOUT                        */
+/* APPLICATION LAYOUT (DESKTOP & MOBILE)     */
 /* ========================================= */
 .app-wrapper {
     display: flex;
     width: 100vw;
     height: 100vh;
     overflow: hidden;
-    opacity: 0; /* Hidden initially until splash & welcome finish */
+    opacity: 0;
     transition: opacity 0.8s ease;
 }
 
@@ -269,6 +274,7 @@ body {
     opacity: 1;
 }
 
+/* SIDEBAR */
 .sidebar {
     width: var(--sidebar-width);
     background: var(--sidebar-bg);
@@ -277,7 +283,7 @@ body {
     flex-direction: column;
     padding: 25px 15px;
     z-index: 1000;
-    transition: transform 0.3s ease;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sidebar-brand {
@@ -327,12 +333,13 @@ body {
 .badge-lock { font-size: 0.8rem; color: var(--danger); }
 .badge-unlock { font-size: 0.8rem; color: var(--secondary); }
 
+/* MAIN WORKSPACE CONTENT */
 .main-content {
     flex: 1;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
-    padding: 25px;
+    padding: clamp(12px, 3vw, 25px);
 }
 
 .top-bar {
@@ -340,31 +347,32 @@ body {
     align-items: center;
     justify-content: space-between;
     gap: 15px;
-    margin-bottom: 25px;
+    margin-bottom: 20px;
 }
 
 .mobile-nav-toggle {
     display: none;
-    font-size: 1.5rem;
+    font-size: 1.4rem;
     background: none;
     border: none;
     color: var(--text);
     cursor: pointer;
+    padding: 8px;
     width: auto;
-    padding: 0;
 }
 
 .top-actions {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 12px;
+    margin-left: auto;
 }
 
 select, input, button {
-    padding: 12px;
+    padding: 10px 14px;
     border: 1px solid var(--border);
     border-radius: 10px;
-    font-size: 15px;
+    font-size: 14px;
     outline: none;
 }
 
@@ -385,7 +393,6 @@ button {
 .action-btn:hover { background: var(--primary-hover); }
 .clear-btn { background: var(--danger); }
 .lock-btn { background: #6c757d; }
-.pdf-btn { background: var(--secondary); margin-top: 15px; width: 100%; }
 
 /* Switch Styling */
 .theme-switch-container {
@@ -397,8 +404,8 @@ button {
 .switch {
     position: relative;
     display: inline-block;
-    width: 52px;
-    height: 28px;
+    width: 48px;
+    height: 26px;
 }
 
 .switch input { opacity: 0; width: 0; height: 0; }
@@ -415,8 +422,8 @@ button {
 .slider:before {
     position: absolute;
     content: "";
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     left: 4px;
     bottom: 4px;
     background: #fff;
@@ -426,18 +433,20 @@ button {
 }
 
 .switch input:checked + .slider { background: #007bff; }
-.switch input:checked + .slider:before { transform: translateX(24px); }
+.switch input:checked + .slider:before { transform: translateX(22px); }
 
 /* Folder Header Bar */
 .folder-header {
     background: var(--card);
-    padding: 20px;
+    padding: clamp(14px, 2.5vw, 20px);
     border-radius: 16px;
     box-shadow: var(--shadow);
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
 .folder-title-area {
@@ -446,37 +455,45 @@ button {
     gap: 10px;
 }
 
+.folder-title-area h2 {
+    font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+}
+
 /* Upload Zone */
 .upload-zone {
     display: block;
     border: 2px dashed var(--primary);
-    padding: 25px;
+    padding: clamp(15px, 3vw, 25px);
     border-radius: 16px;
     text-align: center;
     cursor: pointer;
     background: rgba(0, 123, 255, 0.03);
     margin-bottom: 20px;
-    transition: border-color 0.2s;
+    transition: background 0.2s, border-color 0.2s;
 }
 
 .upload-zone:hover {
     background: rgba(0, 123, 255, 0.06);
 }
 
+/* Responsive Document Grid */
 .doc-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 180px), 1fr));
     gap: 15px;
     margin-bottom: 20px;
 }
 
 .doc-card {
     background: var(--card);
-    padding: 18px;
+    padding: 16px;
     border-radius: 16px;
     text-align: center;
     box-shadow: var(--shadow);
     position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
 .doc-card.is-locked {
@@ -484,9 +501,9 @@ button {
 }
 
 .doc-icon {
-    font-size: 2.4rem;
+    font-size: 2.2rem;
     color: var(--primary);
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 .doc-card.is-locked .doc-icon {
@@ -494,7 +511,7 @@ button {
 }
 
 .doc-title {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     font-weight: 700;
     white-space: nowrap;
     overflow: hidden;
@@ -516,16 +533,16 @@ button {
 
 .doc-btn {
     width: auto;
-    padding: 6px 10px;
-    font-size: 0.8rem;
+    padding: 8px 12px;
+    font-size: 0.85rem;
     border-radius: 8px;
 }
 
 .footer {
     margin-top: auto;
-    padding-top: 20px;
+    padding: 15px 0 5px 0;
     text-align: center;
-    font-size: 13px;
+    font-size: 12px;
     opacity: .8;
     width: 100%;
 }
@@ -534,11 +551,15 @@ button {
     position: fixed;
     inset: 0;
     background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(2px);
     z-index: 999;
     display: none;
 }
 
-@media(max-width:768px){
+/* ========================================= */
+/* MEDIA QUERIES FOR MOBILE ADAPTABILITY      */
+/* ========================================= */
+@media (max-width: 768px) {
     .sidebar {
         position: fixed;
         top: 0;
@@ -547,16 +568,35 @@ button {
         transform: translateX(-100%);
         box-shadow: var(--shadow);
     }
-    .sidebar.open { transform: translateX(0); }
-    .sidebar-backdrop.active { display: block; }
-    .mobile-nav-toggle { display: block; }
-    .main-content { padding: 15px; }
+    .sidebar.open {
+        transform: translateX(0);
+    }
+    .sidebar-backdrop.active {
+        display: block;
+    }
+    .mobile-nav-toggle {
+        display: block;
+    }
+    .doc-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 10px;
+    }
+    .folder-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    #securityToggleBtnArea {
+        width: 100%;
+    }
+    #securityToggleBtnArea button {
+        width: 100%;
+    }
 }
 </style>
 </head>
 <body>
 
-<!-- 1. SPLASH SCREEN (VELINO Ecosystem) -->
+<!-- 1. RESPONSIVE SPLASH SCREEN (VELINO Ecosystem) -->
 <div id="splash-screen">
     <div class="splash-line"></div>
     <div class="apple-logo-text">
@@ -569,7 +609,7 @@ button {
     <div class="developer-credit">Developed by Shiva Velishoju</div>
 </div>
 
-<!-- 2. WELCOME SCREEN (Welcome to Secure Vault) -->
+<!-- 2. RESPONSIVE WELCOME SCREEN -->
 <div id="welcomeScreen">
     <div class="ms-logo">
         <div class="red"></div>
@@ -584,20 +624,20 @@ button {
 <div class="modal-overlay" id="authModal" onclick="if(event.target === this) closeAuthModal()">
     <div class="modal-card">
         <button class="modal-close-btn" onclick="closeAuthModal()" title="Close">&times;</button>
-        <i class="fa-solid fa-lock" id="modalIcon" style="font-size: 3rem; color: var(--primary); margin-bottom: 10px;"></i>
-        <h2 id="modalTitle">Security Authentication</h2>
+        <i class="fa-solid fa-lock" id="modalIcon" style="font-size: 2.8rem; color: var(--primary); margin-bottom: 10px;"></i>
+        <h2 id="modalTitle" style="font-size: 1.2rem;">Security Authentication</h2>
         <p style="font-size: 0.85rem; opacity: 0.7; margin-top: 5px;" id="modalInstruction">Enter Passcode</p>
-        <input type="password" id="authPinInput" class="pin-input" maxlength="4" placeholder="••••">
-        <button class="action-btn" style="width: 100%;" onclick="submitAuth()">Submit</button>
+        <input type="password" id="authPinInput" class="pin-input" maxlength="4" placeholder="••••" inputmode="numeric">
+        <button class="action-btn" style="width: 100%; padding: 12px;" onclick="submitAuth()">Submit</button>
     </div>
 </div>
 
-<!-- 3. MAIN APP CONTAINER -->
+<!-- 3. MAIN RESPONSIVE APP CONTAINER -->
 <div class="app-wrapper" id="appWrapper">
     
     <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
 
-    <!-- MODERN SIDEBAR NAVIGATION -->
+    <!-- SIDEBAR NAVIGATION -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
             <i class="fa-solid fa-vault"></i> SecureVault
@@ -637,7 +677,7 @@ button {
     <!-- WORKSPACE AREA -->
     <main class="main-content">
         <header class="top-bar">
-            <button class="mobile-nav-toggle" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+            <button class="mobile-nav-toggle" onclick="toggleSidebar()" aria-label="Toggle Menu"><i class="fa-solid fa-bars"></i></button>
 
             <div class="top-actions">
                 <select id="language" onchange="changeLanguage()">
@@ -662,11 +702,11 @@ button {
             <div id="securityToggleBtnArea"></div>
         </div>
 
-        <!-- HTML Label-based File Upload Zone -->
+        <!-- File Upload Zone -->
         <label for="fileInput" class="upload-zone">
-            <i class="fa-solid fa-cloud-arrow-up" style="font-size: 2.2rem; color: var(--primary); margin-bottom: 8px;"></i>
-            <p id="uploadText" style="font-weight: 600;">Click or Drag files to Upload</p>
-            <span style="font-size: 0.8rem; opacity: 0.7;">Supports PDF, PNG, JPG (Auto-Saved)</span>
+            <i class="fa-solid fa-cloud-arrow-up" style="font-size: 2rem; color: var(--primary); margin-bottom: 8px;"></i>
+            <p id="uploadText" style="font-weight: 600; font-size: 0.95rem;">Click or Drag files to Upload</p>
+            <span style="font-size: 0.78rem; opacity: 0.7;">Supports PDF, PNG, JPG (Auto-Saved)</span>
             <input type="file" id="fileInput" style="display: none;" onchange="handleFileUpload(event)">
         </label>
 
@@ -738,27 +778,25 @@ window.addEventListener("DOMContentLoaded", function () {
     const welcome = document.getElementById("welcomeScreen");
     const mainApp = document.getElementById("appWrapper");
 
-    // 1. Display Splash Screen for 2.5s, then fade out
+    // Display Splash Screen, then transition to Welcome Screen
     setTimeout(function () {
         splash.classList.add("fade-out");
 
-        // 2. Display Welcome Screen after Splash fades
         setTimeout(function () {
             welcome.classList.add("show");
 
-            // 3. Keep Welcome Screen visible for 2.2s, then fade out & reveal Main UI
+            // Transition from Welcome Screen to Main UI Workspace
             setTimeout(function () {
                 welcome.classList.add("fade-out");
                 
-                // Show Main UI Workspace
                 mainApp.classList.add("visible");
                 updateLockBadges();
                 renderWorkspace();
             }, 2200);
 
-        }, 400); // Small transition offset
+        }, 400);
 
-    }, 2500); // Splash display time
+    }, 2500);
 });
 
 function toggleSidebar() {
@@ -806,9 +844,7 @@ function updateLockBadges() {
     }
 }
 
-/* ========================================= */
-/* SHARED AUTHENTICATION CONTROLLER          */
-/* ========================================= */
+/* AUTHENTICATION CONTROLLER */
 let currentAuth = { targetType: null, targetId: null, action: null };
 
 function promptAuth(type, id, action = '') {
@@ -953,7 +989,6 @@ function renderWorkspace() {
         if (doc.isLocked) iconClass = 'fa-file-shield';
 
         const lockBtnIcon = doc.isLocked ? 'fa-lock' : 'fa-lock-open';
-        const lockBtnClass = doc.isLocked ? 'lock-btn' : 'lock-btn';
 
         card.innerHTML = `
             <div class="doc-icon"><i class="fa-solid ${iconClass}"></i></div>
@@ -962,7 +997,7 @@ function renderWorkspace() {
             <div class="doc-meta">${doc.size}</div>
             <div class="doc-actions">
                 <button class="action-btn doc-btn" onclick="viewDoc(${doc.id})" title="View File"><i class="fa-solid fa-eye"></i></button>
-                <button class="${lockBtnClass} doc-btn" onclick="toggleFileLock(${doc.id})" title="${doc.isLocked ? 'Unlock File' : 'Lock File'}"><i class="fa-solid ${lockBtnIcon}"></i></button>
+                <button class="lock-btn doc-btn" onclick="toggleFileLock(${doc.id})" title="${doc.isLocked ? 'Unlock File' : 'Lock File'}"><i class="fa-solid ${lockBtnIcon}"></i></button>
                 <button class="clear-btn doc-btn" onclick="deleteDoc(${doc.id})" title="Delete File"><i class="fa-solid fa-trash"></i></button>
             </div>
         `;
