@@ -885,7 +885,8 @@ function renderWorkspace() {
         btn.className = isConf ? 'clear-btn' : 'action-btn';
         btn.style.padding = '8px 14px';
         btn.style.fontSize = '0.85rem';
-        btn.innerHTML = isConf ? '<i class="fa-solid fa-lock-open"></i> Make Public' : '<i class="fa-solid fa-lock"></i> Make Confidential';
+        // btn.innerHTML = isConf ? '<i class="fa-solid fa-lock-open"></i> Make Public' : '<i class="fa-solid fa-lock"></i> Make Confidential';
+        
         btn.onclick = () => toggleFolderSecurity(activeFolder);
         btnArea.appendChild(btn);
     }
